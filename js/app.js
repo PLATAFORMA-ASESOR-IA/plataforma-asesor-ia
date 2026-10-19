@@ -12,6 +12,7 @@ async function generateResolutionFlow(clientData, requestData, apiKey) {
         throw new Error("API Key no configurada. Por favor, configúrala en el botón superior ('Config API').");
     }
 
+    // Actualización de modelo a gemini-2.5-flash
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const systemPrompt = `Eres un Arquitecto de Soluciones y Asistente Experto para Asesores Telefónicos de atención al cliente. 
