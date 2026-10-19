@@ -25,7 +25,6 @@ class App {
   }
 
   updateScreen() {
-    // Ocultar todas las pantallas y flujos
     const screens = [
       'screen-1', 'screen-2', 'screen-3',
       'flow-app-issues', 'flow-payments', 'flow-transfers'
@@ -38,7 +37,6 @@ class App {
 
     const progressContainer = document.getElementById('progress-container');
 
-    // Mostrar pantalla actual o flujo
     if (this.state.currentScreen === 1) {
       document.getElementById('screen-1').classList.remove('hidden');
       progressContainer.classList.add('hidden');
@@ -77,7 +75,6 @@ class App {
   selectCategory(category) {
     this.state.currentCategory = category;
     
-    // Ocultar pantalla de selección y mostrar el módulo correspondiente
     document.getElementById('screen-3').classList.add('hidden');
     document.getElementById('progress-container').classList.add('hidden');
 
@@ -90,7 +87,7 @@ class App {
     }
   }
 
-  // --- LÓGICA FLUJO A: PROBLEMAS CON LA APP ---
+  // --- FLUJO A: PROBLEMAS CON LA APP ---
   nextAppStep(step) {
     if (step === 2) {
       document.getElementById('app-step-1').classList.add('opacity-75');
@@ -100,12 +97,12 @@ class App {
       
       const badge2 = document.getElementById('badge-step-2');
       badge2.classList.remove('bg-slate-300', 'text-slate-700');
-      badge2.classList.add('bg-brand-500', 'text-white');
+      badge2.classList.add('bg-nxOrange-500', 'text-white');
       
       const btnBackup = document.getElementById('btn-backup');
       btnBackup.disabled = false;
       btnBackup.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
-      btnBackup.classList.add('bg-brand-600', 'text-white', 'hover:bg-brand-700');
+      btnBackup.classList.add('bg-nxOrange-500', 'text-white', 'hover:bg-nxOrange-600', 'shadow-sm');
     } else if (step === 3) {
       document.getElementById('app-step-2').classList.add('opacity-75');
       document.getElementById('app-step-1').classList.add('hidden');
@@ -114,7 +111,7 @@ class App {
     }
   }
 
-  // --- LÓGICA FLUJO B: PAGOS / RESUMEN ---
+  // --- FLUJO B: PAGOS / RESUMEN ---
   generatePaymentOrder() {
     const amount = document.getElementById('pay-amount').value;
     const paymentType = document.getElementById('pay-type').value;
@@ -127,7 +124,6 @@ class App {
     const orderId = '#NX-' + Math.floor(1000 + Math.random() * 9000);
     this.state.currentOrderId = orderId;
 
-    // Guardar solicitud en LocalStorage para el módulo Admin
     const newRequest = {
       id: orderId,
       name: this.state.client.name || 'Cliente Web',
@@ -146,10 +142,8 @@ class App {
     requests.unshift(newRequest);
     localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
 
-    // Configurar pantalla de espera y link de WhatsApp
     document.getElementById('display-order-id').innerText = orderId;
-    const waMessage = encodeURIComponent(`Hola, solicito el link de pago para el pedido ${orderId} por un monto de $${amount} (${paymentType}).`);
-    // Usar número genérico de soporte de prueba
+    const waMessage = encodeURIComponent(`Hola, solicito el link de pago Naranja X para el pedido ${orderId} por un monto de $${amount} (${paymentType}).`);
     document.getElementById('whatsapp-btn').href = `https://wa.me/5491100000000?text=${waMessage}`;
 
     document.getElementById('pay-form-view').classList.add('hidden');
@@ -161,14 +155,14 @@ class App {
     const currentReq = requests.find(r => r.id === this.state.currentOrderId);
 
     if (currentReq && currentReq.paymentUrl && currentReq.paymentUrl.trim() !== '') {
-      alert('¡El Tesorero ha generado tu enlace! Redirigiendo a Naranja X...');
+      alert('¡El Tesorero ha asignado tu enlace de pago! Redirigiendo a Naranja X...');
       window.location.href = currentReq.paymentUrl;
     } else {
-      alert('El link de pago aún no ha sido cargado por el tesorero. Por favor, asegúrate de haber enviado el mensaje por WhatsApp o intenta nuevamente en unos momentos.');
+      alert('El link de pago aún no ha sido cargado en el sistema de Tesorería. Si ya enviaste el mensaje por WhatsApp, reintenta en unos instantes.');
     }
   }
 
-  // --- LÓGICA FLUJO C: TRANSFERENCIAS / COMPRAS ---
+  // --- FLUJO C: TRANSFERENCIAS / COMPRAS ---
   submitClaim() {
     const amount = document.getElementById('claim-amount').value;
 
@@ -206,5 +200,4 @@ class App {
   }
 }
 
-// Inicializar la aplicación al cargar el DOM
 const app = new App();
