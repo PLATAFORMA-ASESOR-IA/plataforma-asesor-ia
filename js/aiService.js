@@ -1,6 +1,9 @@
+/**
+ * Servicio de Inteligencia Artificial mediante Gemini REST API (gemini-2.5-flash)
+ */
 export async function generateResolutionFlow(clientData, requestData, apiKey) {
     if (!apiKey) {
-        throw new Error("API Key no configurada. Por favor, configúrala en el botón superior.");
+        throw new Error("API Key no configurada. Por favor, configúrala en el botón superior ('Config API').");
     }
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
