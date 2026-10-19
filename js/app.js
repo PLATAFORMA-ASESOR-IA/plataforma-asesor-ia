@@ -1,5 +1,4 @@
-import { generateResolutionFlow } from './aiService.js';
-
+// --- Estado Global del Sistema ---
 const state = {
     currentStep: 1,
     client: { name: '', email: '', phone: '' },
@@ -7,10 +6,73 @@ const state = {
     apiKey: localStorage.getItem('gemini_api_key') || ''
 };
 
-// Se ejecuta una vez que todo el HTML ha cargado en el navegador
-document.addEventListener('DOMContentLoaded', () => {
+// --- Función del Servicio de IA (Gemini REST API) ---
+async function generateResolutionFlow(clientData, requestData, apiKey) {
+    if (!apiKey) {
+        throw new Error("API Key no configurada. Por favor, configúrala en el botón superior ('Config API').");
+    }
 
-    // Referencias al DOM
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const systemPrompt = `Eres un Arquitecto de Soluciones y Asistente Experto para Asesores Telefónicos de atención al cliente. 
+Tu objetivo es analizar la información personal del cliente y su reclamo/consulta específica, y devolver un plan de resolución estructurado en pasos secuenciales claros y directos que el asesor pueda leer y ejecutar en tiempo real durante la llamada telefónica.
+
+Datos del Cliente:
+- Nombre: ${clientData.name}
+- Email: ${clientData.email}
+- Teléfono: ${clientData.phone}
+
+Tipo de Solicitud: ${requestData.type}
+Descripción del Problema: ${requestData.description}
+
+FORMATO DE RESPUESTA OBLIGATORIO:
+Devuelve una lista numerada de 3 a 5 pasos tácticos. Cada paso debe contener:
+1. Título claro del paso.
+2. Script exacto o guía de lo que el asesor debe decirle al cliente.
+3. Acción interna que debe realizar el sistema o el asesor.
+
+Usa etiquetas HTML sencillas como <strong>, <p>, <br> para formatear el resultado de manera limpia.`;
+
+    const requestBody = {
+        contents: [
+            {
+                parts: [
+                    { text: systemPrompt }
+                ]
+            }
+        ],
+        generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 1000
+        }
+    };
+
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error?.message || `Error HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!candidateText) {
+        throw new Error("No se pudo obtener una respuesta válida de la IA.");
+    }
+
+    return candidateText;
+}
+
+// --- Control de Interfaz y Navegación ---
+window.addEventListener('load', () => {
+
     const stepIndicator = document.getElementById('step-indicator');
     const stepPercentage = document.getElementById('step-percentage');
     const progressBar = document.getElementById('progress-bar');
@@ -35,29 +97,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnBack2 = document.getElementById('btn-back-2');
     const btnFinish = document.getElementById('btn-finish');
 
-    // Cargar Key existente en el input
     if (inputApiKey) inputApiKey.value = state.apiKey;
 
-    // --- MANEJO DE EVENTOS ---
-
-    // Abrir/Cerrar Modal Configuración
+    // Config API Key
     if (btnConfig) {
-        btnConfig.addEventListener('click', (e) => {
-            e.preventDefault();
-            modalConfig.classList.remove('hidden');
-        });
+        btnConfig.addEventListener('click', () => modalConfig.classList.remove('hidden'));
     }
-
     if (btnCloseModal) {
-        btnCloseModal.addEventListener('click', (e) => {
-            e.preventDefault();
-            modalConfig.classList.add('hidden');
-        });
+        btnCloseModal.addEventListener('click', () => modalConfig.classList.add('hidden'));
     }
-
     if (btnSaveKey) {
-        btnSaveKey.addEventListener('click', (e) => {
-            e.preventDefault();
+        btnSaveKey.addEventListener('click', () => {
             state.apiKey = inputApiKey.value.trim();
             localStorage.setItem('gemini_api_key', state.apiKey);
             modalConfig.classList.add('hidden');
@@ -65,69 +115,76 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Paso 1: Enviar formulario de datos personales
+    // Navegación Paso 1 -> Paso 2
     if (formStep1) {
         formStep1.addEventListener('submit', (e) => {
-            e.preventDefault(); // EVITA QUE LA PÁGINA SE RECARGUE
+            e.preventDefault();
+            e.stopPropagation();
 
-            state.client.name = document.getElementById('client-name').value;
-            state.client.email = document.getElementById('client-email').value;
-            state.client.phone = document.getElementById('client-phone').value;
+            const nameVal = document.getElementById('client-name').value.trim();
+            const emailVal = document.getElementById('client-email').value.trim();
+            const phoneVal = document.getElementById('client-phone').value.trim();
+
+            if (!nameVal || !emailVal || !phoneVal) {
+                alert('Por favor completa todos los campos.');
+                return false;
+            }
+
+            state.client.name = nameVal;
+            state.client.email = emailVal;
+            state.client.phone = phoneVal;
 
             goToStep(2);
+            return false;
         });
     }
 
-    // Paso 2: Enviar formulario de reclamo
+    // Navegación Paso 2 -> Paso 3
     if (formStep2) {
         formStep2.addEventListener('submit', async (e) => {
-            e.preventDefault(); // EVITA QUE LA PÁGINA SE RECARGUE
+            e.preventDefault();
+            e.stopPropagation();
+
+            const descVal = document.getElementById('request-description').value.trim();
+            if (!descVal) {
+                alert('Por favor ingresa la descripción del problema.');
+                return false;
+            }
 
             state.request.type = document.getElementById('request-type').value;
-            state.request.description = document.getElementById('request-description').value;
+            state.request.description = descVal;
 
             goToStep(3);
             await triggerAIWorkflow();
+            return false;
         });
     }
 
-    // Botones de navegación hacia atrás
+    // Botones Atrás
     if (btnBack1) {
-        btnBack1.addEventListener('click', (e) => {
-            e.preventDefault();
-            goToStep(1);
-        });
+        btnBack1.addEventListener('click', () => goToStep(1));
     }
-
     if (btnBack2) {
-        btnBack2.addEventListener('click', (e) => {
-            e.preventDefault();
-            goToStep(2);
-        });
+        btnBack2.addEventListener('click', () => goToStep(2));
     }
 
-    // Botón de regenerar IA
+    // Regenerar IA
     if (btnRegenerate) {
-        btnRegenerate.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await triggerAIWorkflow();
-        });
+        btnRegenerate.addEventListener('click', async () => await triggerAIWorkflow());
     }
 
-    // Finalizar sesión
+    // Finalizar
     if (btnFinish) {
-        btnFinish.addEventListener('click', (e) => {
-            e.preventDefault();
+        btnFinish.addEventListener('click', () => {
             alert('Sesión registrada y guardada con éxito.');
             location.reload();
         });
     }
 
-    // Función para cambiar de pantalla (Paso 1 -> Paso 2 -> Paso 3)
+    // Cambio de pantalla
     function goToStep(step) {
         state.currentStep = step;
 
-        // Ocultar todas las pantallas
         step1Container.classList.add('hidden');
         step2Container.classList.add('hidden');
         step3Container.classList.add('hidden');
@@ -150,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Función para invocar el servicio de IA
+    // Ejecutar IA
     async function triggerAIWorkflow() {
         aiLoading.classList.remove('hidden');
         aiOutputContent.innerHTML = '';
