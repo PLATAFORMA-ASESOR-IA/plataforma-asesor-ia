@@ -34,6 +34,21 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-slate-100">
 
+  <!-- Protección de acceso por clave -->
+  <div id="login-overlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
+      <div class="w-12 h-12 bg-nxOrange-50 text-nxOrange-500 rounded-xl mx-auto flex items-center justify-center text-xl font-bold">🔒</div>
+      <div>
+        <h2 class="font-extrabold text-nxPurple-900 text-lg">Área Restringida</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Introduce tu clave de tesorero para continuar.</p>
+      </div>
+      <input type="password" id="admin-pass" placeholder="Clave de acceso" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-nxOrange-500">
+      <button onclick="adminApp.login()" class="w-full bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold py-3 rounded-xl transition text-sm">
+        Iniciar Sesión
+      </button>
+    </div>
+  </div>
+
   <!-- Header Admin -->
   <header class="bg-nxPurple-900 text-white border-b border-nxPurple-800 sticky top-0 z-30 shadow-md">
     <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -44,9 +59,9 @@
           <p class="text-xs text-nxPurple-100 opacity-90">Gestión de Solicitudes y Enlaces Naranja X</p>
         </div>
       </div>
-      <a href="index.html" class="text-xs bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-xl transition border border-white/20">
-        Volver al Portal
-      </a>
+      <button onclick="adminApp.logout()" class="text-xs bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-xl transition border border-white/20">
+        Cerrar Sesión
+      </button>
     </div>
   </header>
 
@@ -101,7 +116,26 @@
   <script>
     const adminApp = {
       init() {
-        this.loadRequests();
+        if (sessionStorage.getItem('nx_admin_auth') === 'true') {
+          document.getElementById('login-overlay').classList.add('hidden');
+          this.loadRequests();
+        }
+      },
+
+      login() {
+        const pass = document.getElementById('admin-pass').value;
+        if (pass === 'admin123') { // Clave por defecto
+          sessionStorage.setItem('nx_admin_auth', 'true');
+          document.getElementById('login-overlay').classList.add('hidden');
+          this.loadRequests();
+        } else {
+          alert('Clave incorrecta');
+        }
+      },
+
+      logout() {
+        sessionStorage.removeItem('nx_admin_auth');
+        window.location.reload();
       },
 
       loadRequests() {
