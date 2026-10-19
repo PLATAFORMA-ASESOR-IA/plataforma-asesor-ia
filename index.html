@@ -1,160 +1,167 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plataforma de Atención al Cliente - Asesor Telefónico</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Tesorería y Administración | Naranja X</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+<body class="min-h-screen flex flex-col justify-between bg-slate-100">
 
-    <!-- Header -->
-    <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 sticky top-0 z-50 flex justify-between items-center shadow-md">
-        <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-            <span class="font-bold text-lg tracking-wide text-white">AsesorAtención <span class="text-xs text-indigo-400 font-normal px-2 py-0.5 bg-indigo-950 border border-indigo-800 rounded-full">v2.0</span></span>
+  <!-- Header Admin -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold">NX</div>
+        <div>
+          <h1 class="font-bold text-slate-900 text-base leading-tight">Panel de Tesorería</h1>
+          <p class="text-xs text-slate-500">Gestión de Solicitudes y Enlaces de Pago</p>
         </div>
-    </header>
+      </div>
+      <a href="index.html" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-xl transition">Volver al Portal</a>
+    </div>
+  </header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col space-y-6">
+  <!-- Contenido Admin -->
+  <main class="max-w-5xl w-full mx-auto p-4 md:p-6 flex-1">
+    
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h2 class="font-bold text-slate-900 text-lg">Pedidos y Reclamos Activos</h2>
+          <p class="text-xs text-slate-500">Asocia los links de pago de Naranja X a los identificadores de pedido.</p>
+        </div>
+        <button onclick="adminApp.loadRequests()" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold px-3.5 py-2 rounded-xl transition flex items-center space-x-1">
+          <span>🔄 Actualizar Lista</span>
+        </button>
+      </div>
+
+      <!-- Tabla / Tarjetas de Pedidos -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+              <th class="p-4 font-semibold">ID Pedido</th>
+              <th class="p-4 font-semibold">Cliente / DNI</th>
+              <th class="p-4 font-semibold">Categoría / Monto</th>
+              <th class="p-4 font-semibold">Estado actual</th>
+              <th class="p-4 font-semibold">URL Link de Pago Naranja X</th>
+              <th class="p-4 font-semibold text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700">
+            <!-- Inyectado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Estado Vacío -->
+      <div id="admin-empty-state" class="hidden p-12 text-center space-y-3">
+        <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-full mx-auto flex items-center justify-center text-xl">📭</div>
+        <p class="text-sm font-medium text-slate-600">No hay solicitudes pendientes en este momento.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Admin -->
+  <footer class="py-4 text-center text-xs text-slate-400">
+    &copy; 2026 Módulo de Tesorería Interna - Naranja X
+  </footer>
+
+  <!-- Script Admin -->
+  <script>
+    const adminApp = {
+      init() {
+        this.loadRequests();
+      },
+
+      loadRequests() {
+        const tbody = document.getElementById('admin-table-body');
+        const emptyState = document.getElementById('admin-empty-state');
+        const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
+
+        tbody.innerHTML = '';
+
+        if (requests.length === 0) {
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+
+        requests.forEach((req, index) => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50/70 transition';
+          
+          let badgeColor = 'bg-amber-100 text-amber-800';
+          if (req.status === 'Link Generado') badgeColor = 'bg-emerald-100 text-emerald-800';
+          if (req.category === 'transfers') badgeColor = 'bg-blue-100 text-blue-800';
+
+          tr.innerHTML = `
+            <td class="p-4 font-mono font-bold text-xs text-slate-900">${req.id}</td>
+            <td class="p-4">
+              <div class="font-medium text-slate-900">${req.name}</div>
+              <div class="text-xs text-slate-500">DNI: ${req.dni} | Tel: ${req.phone}</div>
+            </td>
+            <td class="p-4">
+              <div class="text-xs font-semibold uppercase text-slate-600">${req.category}</div>
+              <div class="font-bold text-slate-900">$${req.amount || 0} <span class="text-xs font-normal text-slate-500">(${req.paymentType || 'N/A'})</span></div>
+            </td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${req.status}</span>
+            </td>
+            <td class="p-4">
+              <input type="url" id="url-${req.id}" value="${req.paymentUrl || ''}" placeholder="https://link.naranjax.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-brand-500 transition">
+            </td>
+            <td class="p-4 text-right">
+              <button onclick="adminApp.savePaymentUrl('${req.id}')" class="bg-slate-900 hover:bg-slate-800 text-white font-medium px-3.5 py-2 rounded-lg text-xs transition shadow-sm">
+                Guardar
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      },
+
+      savePaymentUrl(id) {
+        const urlInput = document.getElementById(`url-${id}`);
+        const newUrl = urlInput.value.trim();
+        let requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
         
-        <!-- Step Indicator -->
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-lg">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-semibold tracking-wider text-indigo-400 uppercase" id="step-indicator">Paso 1 de 3: Datos del Cliente</span>
-                <span class="text-xs text-slate-400" id="step-percentage">33% Completado</span>
-            </div>
-            <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-                <div id="progress-bar" class="bg-indigo-500 h-full w-1/3 transition-all duration-300"></div>
-            </div>
-        </div>
+        requests = requests.map(req => {
+          if (req.id === id) {
+            req.paymentUrl = newUrl;
+            if (newUrl) req.status = 'Link Generado';
+          }
+          return req;
+        });
 
-        <!-- Wizard Container -->
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 md:p-6 shadow-xl flex-1 flex flex-col justify-between">
-            
-            <!-- STEP 1: Datos Personales -->
-            <div id="step-1-container" class="wizard-step space-y-4">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Información del Cliente</h2>
-                    <p class="text-sm text-slate-400">Ingresa los datos del titular antes de consultar el motivo de llamada.</p>
-                </div>
-                <form id="form-step-1" onsubmit="return false;" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Nombre Completo</label>
-                        <input type="text" id="client-name" required placeholder="Ej. Juan Pérez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Correo Electrónico</label>
-                        <input type="email" id="client-email" required placeholder="juan.perez@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Teléfono / Celular</label>
-                        <input type="tel" id="client-phone" required placeholder="+54 9 11 1234 5678" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
-                    </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                        <span>Siguiente: Seleccionar Consulta</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </button>
-                </form>
-            </div>
+        localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
+        alert(`¡Enlace guardado correctamente para el pedido ${id}!`);
+        this.loadRequests();
+      }
+    };
 
-            <!-- STEP 2: Panel de Preguntas Frecuentes (Cards) -->
-            <div id="step-2-container" class="wizard-step space-y-4 hidden">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Centro de Consultas Frecuentes</h2>
-                    <p class="text-sm text-slate-400">Selecciona la consulta planteada por el cliente para derivar a la solución correspondiente.</p>
-                </div>
-                
-                <div id="faq-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
-                    <!-- Cards inyectadas por JS -->
-                </div>
-
-                <div class="pt-2">
-                    <button type="button" id="btn-back-1" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-3 px-4 rounded-xl transition">Atrás</button>
-                </div>
-            </div>
-
-            <!-- STEP 3: Protocolo de Actualización de App y Resguardo de Saldo -->
-            <div id="step-3-container" class="wizard-step space-y-4 hidden">
-                <div>
-                    <div class="inline-block bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full text-amber-400 text-xs font-semibold mb-2">
-                        Protocolo de Seguridad Requerido
-                    </div>
-                    <h2 class="text-xl font-bold text-white">Resolución: Actualización de Aplicación y Resguardo</h2>
-                    <p class="text-sm text-slate-400">Consulta seleccionada: <span id="selected-query-title" class="text-indigo-400 font-medium"></span></p>
-                </div>
-
-                <!-- Justificativo Operativo -->
-                <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-sm text-slate-300 space-y-2">
-                    <p class="font-semibold text-white">Guía para el Asesor:</p>
-                    <p>Para solucionar la consulta seleccionada de forma definitiva, se requiere aplicar una <strong>actualización de seguridad en la aplicación</strong> del usuario.</p>
-                    <p class="text-xs text-amber-300 bg-amber-950/40 p-2 rounded border border-amber-800/40">
-                        ⚠ <strong>Script Obligatorio:</strong> "Estimado cliente, mientras se procesa la actualización de la plataforma, por razones de protocolo y protección, su saldo debe quedar temporalmente resguardado en la cuenta de seguridad a nombre del Tesorero de la Empresa."
-                    </p>
-                </div>
-
-                <!-- Formulario de Saldos a Resguardar -->
-                <form id="form-step-3" onsubmit="return false;" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Saldo en Pesos (Sin centavos)</label>
-                            <input type="number" id="balance-ars" required min="0" step="1" placeholder="Ej. 150000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Saldo en Dólares (Sin centavos)</label>
-                            <input type="number" id="balance-usd" required min="0" step="1" placeholder="Ej. 500" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm">
-                        </div>
-                    </div>
-
-                    <!-- Confirmación del Tesorero -->
-                    <div class="bg-slate-900 border border-indigo-900/50 rounded-xl p-4 text-xs text-slate-300 space-y-1">
-                        <p class="text-indigo-400 font-semibold">Cuenta de Resguardo Designada:</p>
-                        <p>Titular: <strong>Tesorero General de Seguridad</strong></p>
-                        <p>Estado del trámite: <span class="text-emerald-400 font-semibold">Listo para vincular</span></p>
-                    </div>
-
-                    <div class="flex space-x-3 pt-2">
-                        <button type="button" id="btn-back-2" class="w-1/3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-3 px-4 rounded-xl transition">Atrás</button>
-                        <button type="submit" class="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                            <span>Continuar Gestión Telefónica</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- STEP 4: Gestión Telefónica en Curso -->
-            <div id="step-4-container" class="wizard-step space-y-4 hidden">
-                <div class="text-center py-6 space-y-3">
-                    <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30">
-                        <svg class="w-8 h-8 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white">Gestión Telefónica Activa</h2>
-                    <p class="text-sm text-slate-300">Resguardo en proceso y actualización en curso.</p>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm space-y-2">
-                    <h3 class="font-bold text-indigo-400 text-base border-b border-slate-800 pb-2">Resumen de Ficha Registrada</h3>
-                    <p><strong>Cliente:</strong> <span id="summary-name"></span></p>
-                    <p><strong>Email:</strong> <span id="summary-email"></span></p>
-                    <p><strong>Teléfono:</strong> <span id="summary-phone"></span></p>
-                    <p><strong>Consulta:</strong> <span id="summary-query"></span></p>
-                    <p><strong>Saldo Pesos Resguardado:</strong> $ <span id="summary-ars"></span> ARS</p>
-                    <p><strong>Saldo Dólares Resguardado:</strong> $ <span id="summary-usd"></span> USD</p>
-                    <p><strong>Estado:</strong> <span class="text-emerald-400 font-semibold">Transferido a Cuenta de Seguridad (Tesorero)</span></p>
-                </div>
-
-                <button type="button" id="btn-finish" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition">
-                    Finalizar y Registrar Otra Atención
-                </button>
-            </div>
-
-        </div>
-    </main>
-
-    <script src="js/app.js?v=3"></script>
+    document.addEventListener('DOMContentLoaded', () => adminApp.init());
+  </script>
 </body>
 </html>
