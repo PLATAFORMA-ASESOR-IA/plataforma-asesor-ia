@@ -7,7 +7,10 @@ const state = {
     apiKey: localStorage.getItem('gemini_api_key') || ''
 };
 
+// Se ejecuta una vez que todo el HTML ha cargado en el navegador
 document.addEventListener('DOMContentLoaded', () => {
+
+    // Referencias al DOM
     const stepIndicator = document.getElementById('step-indicator');
     const stepPercentage = document.getElementById('step-percentage');
     const progressBar = document.getElementById('progress-bar');
@@ -32,12 +35,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnBack2 = document.getElementById('btn-back-2');
     const btnFinish = document.getElementById('btn-finish');
 
+    // Cargar Key existente en el input
     if (inputApiKey) inputApiKey.value = state.apiKey;
 
-    if (btnConfig) btnConfig.addEventListener('click', () => modalConfig.classList.remove('hidden'));
-    if (btnCloseModal) btnCloseModal.addEventListener('click', () => modalConfig.classList.add('hidden'));
+    // --- MANEJO DE EVENTOS ---
+
+    // Abrir/Cerrar Modal Configuración
+    if (btnConfig) {
+        btnConfig.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalConfig.classList.remove('hidden');
+        });
+    }
+
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalConfig.classList.add('hidden');
+        });
+    }
+
     if (btnSaveKey) {
-        btnSaveKey.addEventListener('click', () => {
+        btnSaveKey.addEventListener('click', (e) => {
+            e.preventDefault();
             state.apiKey = inputApiKey.value.trim();
             localStorage.setItem('gemini_api_key', state.apiKey);
             modalConfig.classList.add('hidden');
@@ -45,39 +65,69 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Paso 1: Enviar formulario de datos personales
     if (formStep1) {
         formStep1.addEventListener('submit', (e) => {
-            e.preventDefault();
+            e.preventDefault(); // EVITA QUE LA PÁGINA SE RECARGUE
+
             state.client.name = document.getElementById('client-name').value;
             state.client.email = document.getElementById('client-email').value;
             state.client.phone = document.getElementById('client-phone').value;
+
             goToStep(2);
         });
     }
 
+    // Paso 2: Enviar formulario de reclamo
     if (formStep2) {
         formStep2.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // EVITA QUE LA PÁGINA SE RECARGUE
+
             state.request.type = document.getElementById('request-type').value;
             state.request.description = document.getElementById('request-description').value;
+
             goToStep(3);
             await triggerAIWorkflow();
         });
     }
 
-    if (btnBack1) btnBack1.addEventListener('click', () => goToStep(1));
-    if (btnBack2) btnBack2.addEventListener('click', () => goToStep(2));
-    if (btnRegenerate) btnRegenerate.addEventListener('click', async () => await triggerAIWorkflow());
+    // Botones de navegación hacia atrás
+    if (btnBack1) {
+        btnBack1.addEventListener('click', (e) => {
+            e.preventDefault();
+            goToStep(1);
+        });
+    }
 
+    if (btnBack2) {
+        btnBack2.addEventListener('click', (e) => {
+            e.preventDefault();
+            goToStep(2);
+        });
+    }
+
+    // Botón de regenerar IA
+    if (btnRegenerate) {
+        btnRegenerate.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await triggerAIWorkflow();
+        });
+    }
+
+    // Finalizar sesión
     if (btnFinish) {
-        btnFinish.addEventListener('click', () => {
+        btnFinish.addEventListener('click', (e) => {
+            e.preventDefault();
             alert('Sesión registrada y guardada con éxito.');
             location.reload();
         });
     }
 
+    // Función para cambiar de pantalla (Paso 1 -> Paso 2 -> Paso 3)
     function goToStep(step) {
         state.currentStep = step;
+
+        // Ocultar todas las pantallas
         step1Container.classList.add('hidden');
         step2Container.classList.add('hidden');
         step3Container.classList.add('hidden');
@@ -100,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Función para invocar el servicio de IA
     async function triggerAIWorkflow() {
         aiLoading.classList.remove('hidden');
         aiOutputContent.innerHTML = '';
@@ -122,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             aiOutputContent.innerHTML = `
                 <div class="bg-red-950/50 border border-red-800 rounded-xl p-4 text-sm text-red-300">
                     <strong>Error al procesar la IA:</strong> ${error.message}
-                    <p class="mt-2 text-xs text-red-400">Verifica tu API Key en el menú superior o intenta nuevamente.</p>
+                    <p class="mt-2 text-xs text-red-400">Verifica tu API Key en el menú superior ('Config API') o intenta nuevamente.</p>
                 </div>
             `;
         }
