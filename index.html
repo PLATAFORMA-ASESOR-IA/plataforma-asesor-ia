@@ -12,11 +12,20 @@
       theme: {
         extend: {
           colors: {
-            brand: {
+            nxOrange: {
               50: '#fff7ed',
-              500: '#f97316',
+              100: '#ffedd5',
+              500: '#FF6B00',
               600: '#ea580c',
-              700: '#c2410c',
+              700: '#c2410c'
+            },
+            nxPurple: {
+              50: '#f3e8ff',
+              100: '#e9d5ff',
+              600: '#9333ea',
+              700: '#7e22ce',
+              800: '#6b21a8',
+              900: '#581c87'
             }
           }
         }
@@ -30,10 +39,12 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold text-lg">NX</div>
-        <span class="font-bold text-slate-800 tracking-tight">Portal de Servicios</span>
+        <div class="w-9 h-9 bg-nxOrange-500 rounded-xl flex items-center justify-center text-white font-extrabold text-lg shadow-sm">NX</div>
+        <span class="font-bold text-nxPurple-900 tracking-tight text-base">Portal de Servicios</span>
       </div>
-      <a href="admin.html" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-full transition">Admin / Tesorería</a>
+      <a href="admin.html" class="text-xs bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-800 font-semibold px-3 py-1.5 rounded-full transition border border-nxPurple-100">
+        Admin / Tesorería
+      </a>
     </div>
   </header>
 
@@ -41,31 +52,31 @@
   <main class="max-w-md w-full mx-auto p-4 flex-1 flex flex-col justify-center">
     
     <!-- Barra de Progreso -->
-    <div id="progress-container" class="mb-6 hidden">
-      <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1">
-        <span id="step-label">Paso 1 de 3</span>
-        <span id="step-percent">33%</span>
+    <div id="progress-container" class="mb-5 hidden">
+      <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1.5">
+        <span id="step-label" class="text-nxPurple-900 font-bold">Paso 1 de 3</span>
+        <span id="step-percent" class="text-nxOrange-600 font-bold">33%</span>
       </div>
-      <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-        <div id="progress-bar" class="bg-brand-500 h-full w-1/3 transition-all duration-300 rounded-full"></div>
+      <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+        <div id="progress-bar" class="bg-nxOrange-500 h-full w-1/3 transition-all duration-300 rounded-full"></div>
       </div>
     </div>
 
-    <!-- TARJETA CONTENEDORA DE PASOS -->
+    <!-- TARJETA CONTENEDORA -->
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 md:p-8 relative overflow-hidden fade-in">
 
       <!-- ================= PANTALLA 1: BIENVENIDA ================= -->
       <div id="screen-1" class="space-y-6 text-center">
-        <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner">
+        <div class="w-16 h-16 bg-nxOrange-50 text-nxOrange-500 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner border border-nxOrange-100">
           🚀
         </div>
         <div class="space-y-2">
-          <h1 class="text-2xl font-bold text-slate-900">Bienvenido al Portal</h1>
+          <h1 class="text-2xl font-extrabold text-nxPurple-900">Bienvenido al Portal</h1>
           <p class="text-sm text-slate-600 leading-relaxed">
-            Gestiona tus consultas, pagos y solicitudes de manera rápida, segura y 100% digital.
+            Gestiona tus consultas, pagos y solicitudes de manera rápida, segura y 100% digital con la garantía de <strong class="text-nxOrange-600">Naranja X</strong>.
           </p>
         </div>
-        <button onclick="app.goToScreen(2)" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-brand-500/25 transition duration-200">
+        <button onclick="app.goToScreen(2)" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
           Continuar
         </button>
       </div>
@@ -73,28 +84,28 @@
       <!-- ================= PANTALLA 2: DATOS DEL CLIENTE ================= -->
       <div id="screen-2" class="space-y-5 hidden">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Tus Datos Personales</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Completa la información para registrar tu solicitud.</p>
+          <h2 class="text-xl font-extrabold text-nxPurple-900">Tus Datos Personales</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Completa la información requerida para iniciar tu gestión.</p>
         </div>
 
         <form id="client-form" onsubmit="app.handleClientSubmit(event)" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Nombre y Apellido</label>
-            <input type="text" id="client-name" required placeholder="Ej. Juan Pérez" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white transition text-sm">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre y Apellido</label>
+            <input type="text" id="client-name" required placeholder="Ej. Juan Pérez" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">DNI</label>
-            <input type="text" id="client-dni" required placeholder="Ej. 35123456" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white transition text-sm">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">DNI</label>
+            <input type="text" id="client-dni" required placeholder="Ej. 35123456" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Teléfono / WhatsApp</label>
-            <input type="tel" id="client-phone" required placeholder="Ej. +54 9 11 1234 5678" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white transition text-sm">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Teléfono / WhatsApp</label>
+            <input type="tel" id="client-phone" required placeholder="Ej. +54 9 11 1234 5678" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
-            <input type="email" id="client-email" required placeholder="correo@ejemplo.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white transition text-sm">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
+            <input type="email" id="client-email" required placeholder="correo@ejemplo.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
           </div>
-          <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-brand-500/25 transition duration-200 mt-2">
+          <button type="submit" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200 mt-2">
             Siguiente Paso
           </button>
         </form>
@@ -103,57 +114,57 @@
       <!-- ================= PANTALLA 3: SELECCIÓN DE CATEGORÍA ================= -->
       <div id="screen-3" class="space-y-4 hidden">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">¿Qué gestión necesitas?</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Selecciona una de las opciones disponibles.</p>
+          <h2 class="text-xl font-extrabold text-nxPurple-900">¿Qué gestión necesitas?</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Selecciona una de las siguientes opciones.</p>
         </div>
 
         <div class="space-y-3 pt-1">
           <!-- Card 1 -->
-          <button onclick="app.selectCategory('app_issues')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/40 transition group flex items-center space-x-4">
-            <div class="w-12 h-12 bg-orange-100 text-brand-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition">📱</div>
+          <button onclick="app.selectCategory('app_issues')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxOrange-500 hover:bg-nxOrange-50/50 transition group flex items-center space-x-4">
+            <div class="w-12 h-12 bg-nxOrange-100 text-nxOrange-500 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition">📱</div>
             <div>
-              <h3 class="font-bold text-slate-800 text-sm group-hover:text-brand-700">Problemas con la aplicación</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Guía interactiva de actualización y resguardo.</p>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxOrange-600">_Problemas con la aplicación</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Guía paso a paso de actualización y resguardo.</p>
             </div>
           </button>
 
           <!-- Card 2 -->
-          <button onclick="app.selectCategory('payments')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/40 transition group flex items-center space-x-4">
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition">💳</div>
+          <button onclick="app.selectCategory('payments')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
+            <div class="w-12 h-12 bg-nxPurple-100 text-nxPurple-800 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition">💳</div>
             <div>
-              <h3 class="font-bold text-slate-800 text-sm group-hover:text-emerald-700">Pagos / Resumen</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Generación de link de pago y gestión de montos.</p>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">_Pagos/Resumen</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Generación de link de pago Naranja X.</p>
             </div>
           </button>
 
           <!-- Card 3 -->
-          <button onclick="app.selectCategory('transfers')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/40 transition group flex items-center space-x-4">
-            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition">🔄</div>
+          <button onclick="app.selectCategory('transfers')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxOrange-500 hover:bg-nxOrange-50/50 transition group flex items-center space-x-4">
+            <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition">🔄</div>
             <div>
-              <h3 class="font-bold text-slate-800 text-sm group-hover:text-blue-700">Transferencias / Compras</h3>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxOrange-600">_Transferencias/Compras</h3>
               <p class="text-xs text-slate-500 mt-0.5">Reclamos y acreditación sobre saldo actual.</p>
             </div>
           </button>
         </div>
       </div>
 
-      <!-- ================= MÓDULO FLUJO A: PROBLEMAS CON LA APP ================= -->
+      <!-- ================= FLUJO A: PROBLEMAS CON LA APP ================= -->
       <div id="flow-app-issues" class="space-y-6 hidden">
         <div>
-          <span class="text-xs font-bold text-brand-600 uppercase tracking-wider">Asistencia Técnica</span>
-          <h2 class="text-xl font-bold text-slate-900 mt-0.5">Solución de Incidencias</h2>
+          <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Asistencia Técnica Naranja X</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Solución de Incidencias</h2>
         </div>
 
         <div class="space-y-4">
           <!-- Paso 1 App -->
           <div id="app-step-1" class="p-4 bg-slate-50 rounded-xl border border-slate-200">
             <div class="flex items-center space-x-3 mb-2">
-              <span class="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center text-xs font-bold">1</span>
+              <span class="w-6 h-6 rounded-full bg-nxOrange-500 text-white flex items-center justify-center text-xs font-bold">1</span>
               <h4 class="font-bold text-slate-800 text-sm">Actualizar la aplicación</h4>
             </div>
-            <p class="text-xs text-slate-600 mb-3 ml-9">Asegúrate de contar con la última versión desde la tienda oficial para evitar errores de compatibilidad.</p>
+            <p class="text-xs text-slate-600 mb-3 ml-9">Asegúrate de tener instalada la última versión desde la app store oficial para evitar errores.</p>
             <div class="ml-9">
-              <button onclick="app.nextAppStep(2)" class="text-xs bg-brand-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-700 transition">Ya actualicé, continuar</button>
+              <button onclick="app.nextAppStep(2)" class="text-xs bg-nxOrange-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-nxOrange-600 transition shadow-sm">Ya actualicé, continuar</button>
             </div>
           </div>
 
@@ -163,104 +174,104 @@
               <span class="w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold" id="badge-step-2">2</span>
               <h4 class="font-bold text-slate-800 text-sm">Realizar resguardo de datos</h4>
             </div>
-            <p class="text-xs text-slate-600 mb-3 ml-9">Sincroniza tu cuenta para respaldar de forma segura tus preferencias y movimientos.</p>
+            <p class="text-xs text-slate-600 mb-3 ml-9">Sincroniza tu cuenta para respaldar de forma segura tu saldo e historial.</p>
             <div class="ml-9">
-              <button id="btn-backup" onclick="app.nextAppStep(3)" disabled class="text-xs bg-slate-300 text-slate-500 font-semibold px-4 py-2 rounded-lg cursor-not-allowed transition">Respaldar datos</button>
+              <button id="btn-backup" onclick="app.nextAppStep(3)" disabled class="text-xs bg-slate-300 text-slate-500 font-bold px-4 py-2 rounded-lg cursor-not-allowed transition">Respaldar datos</button>
             </div>
           </div>
 
           <!-- Paso 3 App Finalizado -->
           <div id="app-step-3" class="hidden text-center space-y-4 py-4">
             <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center text-2xl">✓</div>
-            <h3 class="font-bold text-slate-900 text-lg">¡Proceso Finalizado con Éxito!</h3>
-            <p class="text-xs text-slate-600">Tu dispositivo está optimizado y tus datos respaldados correctamente.</p>
-            <button onclick="app.resetApp()" class="w-full bg-slate-800 text-white font-semibold py-3 rounded-xl hover:bg-slate-900 transition text-sm">Volver al Inicio</button>
+            <h3 class="font-extrabold text-nxPurple-900 text-lg">¡Proceso Finalizado con Éxito!</h3>
+            <p class="text-xs text-slate-600">Tu aplicación está optimizada y tus datos resguardados correctamente.</p>
+            <button onclick="app.resetApp()" class="w-full bg-nxPurple-900 text-white font-bold py-3 rounded-xl hover:bg-nxPurple-800 transition text-sm">Volver al Inicio</button>
           </div>
         </div>
       </div>
 
-      <!-- ================= MÓDULO FLUJO B: PAGOS / RESUMEN ================= -->
+      <!-- ================= FLUJO B: PAGOS / RESUMEN ================= -->
       <div id="flow-payments" class="space-y-5 hidden">
         <div>
-          <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Pasarela Naranja X</span>
-          <h2 class="text-xl font-bold text-slate-900 mt-0.5">Generación de Link de Pago</h2>
+          <span class="text-xs font-bold text-nxPurple-800 uppercase tracking-wider">Pasarela Naranja X</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Generación de Link de Pago</h2>
         </div>
 
         <!-- Submódulo B1: Ingreso de Monto -->
         <div id="pay-form-view" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Monto a Abonar ($)</label>
-            <input type="number" id="pay-amount" placeholder="Ej. 15000" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white transition text-sm">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Abonar ($)</label>
+            <input type="number" id="pay-amount" placeholder="Ej. 15000" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Tipo de Pago</label>
-            <select id="pay-type" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white transition text-sm">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Pago</label>
+            <select id="pay-type" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
               <option value="Pago Total">Pago Total</option>
               <option value="Pago Parcial">Pago Parcial</option>
             </select>
           </div>
 
-          <button onclick="app.generatePaymentOrder()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-emerald-600/25 transition duration-200">
+          <button onclick="app.generatePaymentOrder()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
             Generar Solicitud de Pago
           </button>
         </div>
 
         <!-- Submódulo B2: Esperando Link de Pago -->
         <div id="pay-waiting-view" class="space-y-5 hidden text-center">
-          <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
-            <p class="text-xs text-emerald-700 font-medium">Pedido Creado Correctamente</p>
-            <h3 id="display-order-id" class="text-lg font-bold text-emerald-900 tracking-wide">#NX-0000</h3>
+          <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
+            <p class="text-xs text-nxPurple-800 font-semibold">Pedido Creado Correctamente</p>
+            <h3 id="display-order-id" class="text-xl font-extrabold text-nxPurple-900 tracking-wide">#NX-0000</h3>
           </div>
 
           <div class="space-y-3">
             <p class="text-xs text-slate-600 leading-relaxed">
-              Envía el mensaje preformateado a nuestro canal oficial para que el tesorero asigne tu link de pago de Naranja X.
+              Haz clic abajo para enviar el mensaje preformateado por WhatsApp al Tesorero Oficial.
             </p>
-            <a id="whatsapp-btn" href="#" target="_blank" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow flex items-center justify-center space-x-2 transition text-sm">
+            <a id="whatsapp-btn" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-2 transition text-sm">
               <span>💬 Solicitar Link por WhatsApp</span>
             </a>
           </div>
 
           <div class="pt-4 border-t border-slate-100 space-y-3">
             <div class="flex items-center justify-center space-x-2 text-xs text-slate-500">
-              <div class="w-3 h-3 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-              <span>Esperando confirmación del Tesorero...</span>
+              <div class="w-3 h-3 border-2 border-nxOrange-500 border-t-transparent rounded-full animate-spin"></div>
+              <span>Esperando que el Tesorero cargue tu Link de Pago...</span>
             </div>
-            <button onclick="app.checkPaymentStatus()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm">
+            <button onclick="app.checkPaymentStatus()" class="w-full bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold py-3.5 px-4 rounded-xl transition text-sm shadow-md">
               Verificar Estado / Continuar al Pago
             </button>
           </div>
         </div>
       </div>
 
-      <!-- ================= MÓDULO FLUJO C: TRANSFERENCIAS / COMPRAS ================= -->
+      <!-- ================= FLUJO C: TRANSFERENCIAS / COMPRAS ================= -->
       <div id="flow-transfers" class="space-y-5 hidden">
         <div>
-          <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Gestión de Reclamos</span>
-          <h2 class="text-xl font-bold text-slate-900 mt-0.5">Acreditación sobre Saldo Actual</h2>
+          <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Gestión de Reclamos Naranja X</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Acreditación sobre Saldo Actual</h2>
         </div>
 
         <div id="claim-form-view" class="space-y-4">
           <p class="text-xs text-slate-600 leading-relaxed">
-            Ingresa el monto correspondiente al reclamo de tu transferencia o compra para iniciar la auditoría interna.
+            Ingresa el monto correspondiente al reclamo de tu compra o transferencia para iniciar el proceso de acreditación.
           </p>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Monto del Reclamo ($)</label>
-            <input type="number" id="claim-amount" placeholder="Ej. 8500" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-brand-500 focus:bg-white transition text-sm">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto del Reclamo ($)</label>
+            <input type="number" id="claim-amount" placeholder="Ej. 8500" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
           </div>
-          <button onclick="app.submitClaim()" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-blue-600/25 transition duration-200">
+          <button onclick="app.submitClaim()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
             Registrar Reclamo
           </button>
         </div>
 
         <div id="claim-success-view" class="space-y-4 hidden text-center py-2">
-          <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full mx-auto flex items-center justify-center text-2xl">🛡️</div>
-          <h3 class="font-bold text-slate-900 text-lg">Reclamo en Proceso</h3>
+          <div class="w-16 h-16 bg-nxPurple-100 text-nxPurple-800 rounded-full mx-auto flex items-center justify-center text-2xl border border-nxPurple-200">🛡️</div>
+          <h3 class="font-extrabold text-nxPurple-900 text-lg">Reclamo en Proceso de Acreditación</h3>
           <p class="text-xs text-slate-600 leading-relaxed">
-            Tu caso ha sido derivado a un <strong>Tesorero Oficial</strong> de la empresa. La acreditación sobre tu saldo actual se reflejará una vez validado el comprobante.
+            El caso ha sido registrado y será procesado por un <strong>Tesorero Oficial de Naranja X</strong> para ser impactado directamente sobre tu saldo actual.
           </p>
-          <button onclick="app.resetApp()" class="w-full bg-slate-800 text-white font-semibold py-3 rounded-xl hover:bg-slate-900 transition text-sm">Finalizar</button>
+          <button onclick="app.resetApp()" class="w-full bg-nxPurple-900 text-white font-bold py-3 rounded-xl hover:bg-nxPurple-800 transition text-sm">Finalizar</button>
         </div>
       </div>
 
