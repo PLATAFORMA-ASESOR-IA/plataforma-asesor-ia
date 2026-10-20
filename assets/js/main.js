@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// Tus credenciales oficiales de Firebase integradas
+// Credenciales de Firebase de tu proyecto
 const firebaseConfig = {
   apiKey: "AIzaSyDHcfixcpUU4O-RYLmfNzTUDZFB13jEt5s",
   authDomain: "portal-naranja-763f4.firebaseapp.com",
@@ -285,4 +285,5 @@ class App {
   }
 }
 
-const app = new App();
+// Exportación explícita al objeto global window para interacción con HTML onclick
+window.app = new App();
