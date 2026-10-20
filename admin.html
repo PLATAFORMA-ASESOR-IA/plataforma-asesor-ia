@@ -74,9 +74,17 @@
           <h2 class="font-extrabold text-nxPurple-900 text-lg">Pedidos y Reclamaciones Activas</h2>
           <p class="text-xs text-slate-500">Asocia los enlaces de Pago/Reintegro e inspecciona las cuentas declaradas por el cliente.</p>
         </div>
-        <button onclick="adminApp.loadRequests()" class="text-xs bg-nxOrange-50 hover:bg-nxOrange-100 text-nxOrange-700 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxOrange-100">
-          <span>🔄 Actualizar Lista</span>
-        </button>
+        
+        <div class="flex items-center space-x-2">
+          <!-- BOTÓN PARA ACTIVAR/PROBAR ALERTAS MANUALMENTE -->
+          <button id="btn-notifications" onclick="adminApp.enableNotificationsManual()" class="text-xs bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-800 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxPurple-200">
+            <span>🔔 Activar Notificaciones</span>
+          </button>
+
+          <button onclick="adminApp.loadRequests()" class="text-xs bg-nxOrange-50 hover:bg-nxOrange-100 text-nxOrange-700 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxOrange-100">
+            <span>🔄 Actualizar Lista</span>
+          </button>
+        </div>
       </div>
 
       <!-- Tabla de Pedidos -->
@@ -113,27 +121,18 @@
     &copy; 2026 Módulo de Tesorería Interna - Naranja X
   </footer>
 
-  <!-- Script Admin con Notificaciones y Alarma -->
+  <!-- Script Admin con Alerta Manual -->
   <script>
     const adminApp = {
       lastKnownCount: 0,
+      audioCtx: null,
 
       init() {
         if (sessionStorage.getItem('nx_admin_auth') === 'true') {
           document.getElementById('login-overlay').classList.add('hidden');
-          this.requestNotificationPermission();
           this.loadRequests();
           this.startMonitoring();
-        }
-      },
-
-      async requestNotificationPermission() {
-        if ('Notification' in window && Notification.permission === 'default') {
-          try {
-            await Notification.requestPermission();
-          } catch (e) {
-            console.log('Error al solicitar notificaciones:', e);
-          }
+          this.updateNotificationButtonState();
         }
       },
 
@@ -142,9 +141,9 @@
         if (pass === 'admin123') {
           sessionStorage.setItem('nx_admin_auth', 'true');
           document.getElementById('login-overlay').classList.add('hidden');
-          this.requestNotificationPermission();
           this.loadRequests();
           this.startMonitoring();
+          this.enableNotificationsManual();
         } else {
           alert('Clave incorrecta');
         }
@@ -155,24 +154,72 @@
         window.location.reload();
       },
 
+      // Solicitud manual de permisos al presionar el botón 🔔
+      async enableNotificationsManual() {
+        // Inicializar contexto de audio con gesto del usuario
+        try {
+          this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          this.playAlertSound();
+        } catch (e) {
+          console.log('Error de Audio:', e);
+        }
+
+        if (!('Notification' in window)) {
+          alert('Este navegador no soporta notificaciones de escritorio.');
+          return;
+        }
+
+        if (Notification.permission === 'granted') {
+          alert('✅ Las notificaciones ya están activadas correctamente.');
+          this.triggerNotification({ id: '#TEST-00', name: 'Prueba de Sistema', amount: '100', category: 'payments' });
+        } else if (Notification.permission === 'denied') {
+          alert('⚠️ Las notificaciones están bloqueadas en tu navegador.\n\nPara activarlas: Haz clic en el icono del candado 🔒 al lado de la dirección URL en tu navegador y selecciona "Permitir Notificaciones".');
+        } else {
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') {
+            alert('🎉 ¡Notificaciones activadas con éxito!');
+            this.triggerNotification({ id: '#TEST-00', name: 'Prueba de Sistema', amount: '100', category: 'payments' });
+          } else {
+            alert('No se otorgaron los permisos para mostrar notificaciones.');
+          }
+        }
+        this.updateNotificationButtonState();
+      },
+
+      updateNotificationButtonState() {
+        const btn = document.getElementById('btn-notifications');
+        if (!btn) return;
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+          btn.innerHTML = '<span>🔔 Alertas Activas</span>';
+          btn.className = 'text-xs bg-emerald-50 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200';
+        }
+      },
+
       playAlertSound() {
         try {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
+          if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
+
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
 
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+          osc.frequency.setValueAtTime(587.33, this.audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, this.audioCtx.currentTime + 0.2);
 
-          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.4);
 
           osc.connect(gain);
-          gain.connect(audioCtx.destination);
+          gain.connect(this.audioCtx.destination);
 
           osc.start();
-          osc.stop(audioCtx.currentTime + 0.4);
+          osc.stop(this.audioCtx.currentTime + 0.4);
         } catch (e) {
           console.log('Audio error:', e);
         }
