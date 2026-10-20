@@ -143,8 +143,6 @@ class App {
     localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
 
     document.getElementById('display-order-id').innerText = orderId;
-    const waMessage = encodeURIComponent(`Hola, solicito el link de pago Naranja X para el pedido ${orderId} por un monto de $${amount} (${paymentType}).`);
-    document.getElementById('whatsapp-btn').href = `https://wa.me/5491100000000?text=${waMessage}`;
 
     document.getElementById('pay-form-view').classList.add('hidden');
     document.getElementById('pay-waiting-view').classList.remove('hidden');
@@ -155,10 +153,11 @@ class App {
     const currentReq = requests.find(r => r.id === this.state.currentOrderId);
 
     if (currentReq && currentReq.paymentUrl && currentReq.paymentUrl.trim() !== '') {
-      alert('¡El Tesorero ha asignado tu enlace de pago! Redirigiendo a Naranja X...');
+      // Mensaje actualizado según requerimiento
+      alert('Ya se Generó tu Link de Pago');
       window.location.href = currentReq.paymentUrl;
     } else {
-      alert('El link de pago aún no ha sido cargado en el sistema de Tesorería. Si ya enviaste el mensaje por WhatsApp, reintenta en unos instantes.');
+      alert('Aún estamos procesando tu solicitud. Por favor, reintenta en un momento.');
     }
   }
 
@@ -193,6 +192,25 @@ class App {
 
     document.getElementById('claim-form-view').classList.add('hidden');
     document.getElementById('claim-success-view').classList.remove('hidden');
+  }
+
+  // --- MODAL ADMIN OCULTO ---
+  openAdminModal() {
+    document.getElementById('admin-auth-modal').classList.remove('hidden');
+  }
+
+  closeAdminModal() {
+    document.getElementById('admin-auth-modal').classList.add('hidden');
+  }
+
+  verifyAdminPass() {
+    const pass = document.getElementById('admin-pass-input').value;
+    if (pass === 'admin123') { // Clave por defecto
+      sessionStorage.setItem('nx_admin_auth', 'true');
+      window.location.href = 'admin.html';
+    } else {
+      alert('Clave incorrecta');
+    }
   }
 
   resetApp() {
