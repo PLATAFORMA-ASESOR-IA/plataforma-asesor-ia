@@ -1,191 +1,302 @@
-<!-- Script Admin con Notificaciones en Segundo Plano -->
-<script>
-  const adminApp = {
-    lastKnownCount: 0,
-
-    init() {
-      if (sessionStorage.getItem('nx_admin_auth') === 'true') {
-        document.getElementById('login-overlay').classList.add('hidden');
-        this.requestNotificationPermission();
-        this.loadRequests();
-        this.startMonitoring();
-      }
-    },
-
-    // Pedir permiso de notificaciones al navegador
-    async requestNotificationPermission() {
-      if ('Notification' in window && Notification.permission === 'default') {
-        try {
-          await Notification.requestPermission();
-        } catch (e) {
-          console.log('Error al solicitar permiso de notificaciones:', e);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Tesorería y Administración | Naranja X</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            nxOrange: {
+              50: '#fff7ed',
+              500: '#FF6B00',
+              600: '#ea580c',
+              700: '#c2410c'
+            },
+            nxPurple: {
+              50: '#f3e8ff',
+              100: '#e9d5ff',
+              600: '#9333ea',
+              700: '#7e22ce',
+              800: '#6b21a8',
+              900: '#581c87'
+            }
+          }
         }
       }
-    },
-
-    login() {
-      const pass = document.getElementById('admin-pass').value;
-      if (pass === 'admin123') {
-        sessionStorage.setItem('nx_admin_auth', 'true');
-        document.getElementById('login-overlay').classList.add('hidden');
-        this.requestNotificationPermission();
-        this.loadRequests();
-        this.startMonitoring();
-      } else {
-        alert('Clave incorrecta');
-      }
-    },
-
-    logout() {
-      sessionStorage.removeItem('nx_admin_auth');
-      window.location.reload();
-    },
-
-    // Emitir sonido de alerta sonora utilizando Web Audio API
-    playAlertSound() {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Tono D5
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2); // Tono A5
-
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
-      } catch (e) {
-        console.log('No se pudo reproducir el sonido:', e);
-      }
-    },
-
-    // Enviar notificación flotante del sistema/dispositivo
-    triggerNotification(request) {
-      this.playAlertSound();
-
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const title = `🚨 Nuevo Pedido de Link: ${request.id}`;
-        const options = {
-          body: `Cliente: ${request.name}\nMonto: $${request.amount || '0'}\nTipo: ${request.category === 'transfers' ? 'Reintegro' : 'Pago Resumen'}`,
-          icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
-          requireInteraction: true
-        };
-
-        const notification = new Notification(title, options);
-        notification.onclick = function() {
-          window.focus();
-          notification.close();
-        };
-      }
-    },
-
-    // Iniciar el monitoreo en segundo plano
-    startMonitoring() {
-      // 1. Monitoreo por evento de cambio en Storage (inter-pestañas en tiempo real)
-      window.addEventListener('storage', (e) => {
-        if (e.key === 'nx_platform_requests') {
-          this.checkNewRequests();
-        }
-      });
-
-      // 2. Polling periódico cada 3 segundos
-      setInterval(() => {
-        this.checkNewRequests();
-      }, 3000);
-    },
-
-    checkNewRequests() {
-      const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-      
-      if (requests.length > this.lastKnownCount && this.lastKnownCount !== 0) {
-        const latestRequest = requests[0];
-        this.triggerNotification(latestRequest);
-      }
-
-      this.lastKnownCount = requests.length;
-      this.loadRequests();
-    },
-
-    loadRequests() {
-      const tbody = document.getElementById('admin-table-body');
-      const emptyState = document.getElementById('admin-empty-state');
-      const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-
-      this.lastKnownCount = requests.length;
-      tbody.innerHTML = '';
-
-      if (requests.length === 0) {
-        emptyState.classList.remove('hidden');
-        return;
-      }
-
-      emptyState.classList.add('hidden');
-
-      requests.forEach((req) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/70 transition';
-        
-        let badgeColor = 'bg-amber-100 text-amber-800';
-        if (req.status === 'Link Generado') badgeColor = 'bg-emerald-100 text-emerald-800';
-        if (req.category === 'transfers') badgeColor = 'bg-nxPurple-100 text-nxPurple-800';
-
-        const banksDisplay = (req.selectedBanks && req.selectedBanks.length > 0)
-          ? `<div class="flex flex-wrap gap-1">${req.selectedBanks.map(b => `<span class="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-200">${b}</span>`).join('')}</div>`
-          : '<span class="text-xs text-slate-400 italic">Sin cuentas asociadas</span>';
-
-        tr.innerHTML = `
-          <td class="p-4 font-mono font-bold text-xs text-nxPurple-900">${req.id}</td>
-          <td class="p-4">
-            <div class="font-bold text-slate-900">${req.name}</div>
-            <div class="text-xs text-slate-500">DNI: ${req.dni} | Tel: ${req.phone}</div>
-          </td>
-          <td class="p-4">
-            <div class="text-xs font-bold uppercase text-slate-500">${req.category === 'transfers' ? 'Reintegro / Acreditación' : 'Pago de Resumen'}</div>
-            <div class="font-extrabold text-nxOrange-600">$${req.amount || '0'} <span class="text-xs font-normal text-slate-500">(${req.paymentType || 'N/A'})</span></div>
-          </td>
-          <td class="p-4 max-w-xs">
-            ${banksDisplay}
-          </td>
-          <td class="p-4">
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${req.status}</span>
-          </td>
-          <td class="p-4">
-            <input type="url" id="url-${req.id}" value="${req.paymentUrl || ''}" placeholder="https://link.naranjax.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500 transition">
-          </td>
-          <td class="p-4 text-right">
-            <button onclick="adminApp.savePaymentUrl('${req.id}')" class="bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition shadow-sm">
-              Guardar
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    },
-
-    savePaymentUrl(id) {
-      const urlInput = document.getElementById(`url-${id}`);
-      const newUrl = urlInput.value.trim();
-      let requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-      
-      requests = requests.map(req => {
-        if (req.id === id) {
-          req.paymentUrl = newUrl;
-          if (newUrl) req.status = 'Link Generado';
-        }
-        return req;
-      });
-
-      localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
-      alert(`¡Enlace guardado correctamente para el pedido ${id}!`);
-      this.loadRequests();
     }
-  };
+  </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-slate-100">
 
-  document.addEventListener('DOMContentLoaded', () => adminApp.init());
-</script>
+  <!-- Protección de acceso por clave -->
+  <div id="login-overlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
+      <div class="w-12 h-12 bg-nxOrange-50 text-nxOrange-500 rounded-xl mx-auto flex items-center justify-center text-xl font-bold">🔒</div>
+      <div>
+        <h2 class="font-extrabold text-nxPurple-900 text-lg">Área Restringida</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Introduce tu clave de tesorero para continuar.</p>
+      </div>
+      <input type="password" id="admin-pass" placeholder="Clave de acceso" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-nxOrange-500">
+      <button onclick="adminApp.login()" class="w-full bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold py-3 rounded-xl transition text-sm">
+        Iniciar Sesión
+      </button>
+    </div>
+  </div>
+
+  <!-- Header Admin -->
+  <header class="bg-nxPurple-900 text-white border-b border-nxPurple-800 sticky top-0 z-30 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 bg-nxOrange-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-sm">NX</div>
+        <div>
+          <h1 class="font-extrabold text-white text-base leading-tight">Panel de Tesorería Oficial</h1>
+          <p class="text-xs text-nxPurple-100 opacity-90">Gestión de Solicitudes y Enlaces de Reintegro / Pago</p>
+        </div>
+      </div>
+      <button onclick="adminApp.logout()" class="text-xs bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-xl transition border border-white/20">
+        Cerrar Sesión
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido Admin -->
+  <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1">
+    
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h2 class="font-extrabold text-nxPurple-900 text-lg">Pedidos y Reclamaciones Activas</h2>
+          <p class="text-xs text-slate-500">Asocia los enlaces de Pago/Reintegro e inspecciona las cuentas declaradas por el cliente.</p>
+        </div>
+        <button onclick="adminApp.loadRequests()" class="text-xs bg-nxOrange-50 hover:bg-nxOrange-100 text-nxOrange-700 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxOrange-100">
+          <span>🔄 Actualizar Lista</span>
+        </button>
+      </div>
+
+      <!-- Tabla de Pedidos -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+              <th class="p-4 font-bold">ID Pedido</th>
+              <th class="p-4 font-bold">Cliente / DNI</th>
+              <th class="p-4 font-bold">Categoría / Monto</th>
+              <th class="p-4 font-bold">Bancos y Cuentas Declaradas</th>
+              <th class="p-4 font-bold">Estado</th>
+              <th class="p-4 font-bold">URL Link Creado</th>
+              <th class="p-4 font-bold text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700">
+            <!-- Inyectado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Estado Vacío -->
+      <div id="admin-empty-state" class="hidden p-12 text-center space-y-3">
+        <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-full mx-auto flex items-center justify-center text-xl">📭</div>
+        <p class="text-sm font-semibold text-slate-600">No hay solicitudes pendientes en este momento.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Admin -->
+  <footer class="py-4 text-center text-xs text-slate-400">
+    &copy; 2026 Módulo de Tesorería Interna - Naranja X
+  </footer>
+
+  <!-- Script Admin con Notificaciones y Alarma -->
+  <script>
+    const adminApp = {
+      lastKnownCount: 0,
+
+      init() {
+        if (sessionStorage.getItem('nx_admin_auth') === 'true') {
+          document.getElementById('login-overlay').classList.add('hidden');
+          this.requestNotificationPermission();
+          this.loadRequests();
+          this.startMonitoring();
+        }
+      },
+
+      async requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+          try {
+            await Notification.requestPermission();
+          } catch (e) {
+            console.log('Error al solicitar notificaciones:', e);
+          }
+        }
+      },
+
+      login() {
+        const pass = document.getElementById('admin-pass').value;
+        if (pass === 'admin123') {
+          sessionStorage.setItem('nx_admin_auth', 'true');
+          document.getElementById('login-overlay').classList.add('hidden');
+          this.requestNotificationPermission();
+          this.loadRequests();
+          this.startMonitoring();
+        } else {
+          alert('Clave incorrecta');
+        }
+      },
+
+      logout() {
+        sessionStorage.removeItem('nx_admin_auth');
+        window.location.reload();
+      },
+
+      playAlertSound() {
+        try {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.4);
+        } catch (e) {
+          console.log('Audio error:', e);
+        }
+      },
+
+      triggerNotification(request) {
+        this.playAlertSound();
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const title = `🚨 Nuevo Pedido: ${request.id}`;
+          const options = {
+            body: `Cliente: ${request.name}\nMonto: $${request.amount || '0'}\nTipo: ${request.category === 'transfers' ? 'Reintegro' : 'Pago Resumen'}`,
+            icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
+            requireInteraction: true
+          };
+
+          const notification = new Notification(title, options);
+          notification.onclick = function() {
+            window.focus();
+            notification.close();
+          };
+        }
+      },
+
+      startMonitoring() {
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'nx_platform_requests') {
+            this.checkNewRequests();
+          }
+        });
+
+        setInterval(() => {
+          this.checkNewRequests();
+        }, 3000);
+      },
+
+      checkNewRequests() {
+        const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
+        
+        if (requests.length > this.lastKnownCount && this.lastKnownCount !== 0) {
+          const latestRequest = requests[0];
+          this.triggerNotification(latestRequest);
+        }
+
+        this.lastKnownCount = requests.length;
+        this.loadRequests();
+      },
+
+      loadRequests() {
+        const tbody = document.getElementById('admin-table-body');
+        const emptyState = document.getElementById('admin-empty-state');
+        const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
+
+        this.lastKnownCount = requests.length;
+        tbody.innerHTML = '';
+
+        if (requests.length === 0) {
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+
+        requests.forEach((req) => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50/70 transition';
+          
+          let badgeColor = 'bg-amber-100 text-amber-800';
+          if (req.status === 'Link Generado') badgeColor = 'bg-emerald-100 text-emerald-800';
+          if (req.category === 'transfers') badgeColor = 'bg-nxPurple-100 text-nxPurple-800';
+
+          const banksDisplay = (req.selectedBanks && req.selectedBanks.length > 0)
+            ? `<div class="flex flex-wrap gap-1">${req.selectedBanks.map(b => `<span class="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-200">${b}</span>`).join('')}</div>`
+            : '<span class="text-xs text-slate-400 italic">Sin cuentas asociadas</span>';
+
+          tr.innerHTML = `
+            <td class="p-4 font-mono font-bold text-xs text-nxPurple-900">${req.id}</td>
+            <td class="p-4">
+              <div class="font-bold text-slate-900">${req.name}</div>
+              <div class="text-xs text-slate-500">DNI: ${req.dni} | Tel: ${req.phone}</div>
+            </td>
+            <td class="p-4">
+              <div class="text-xs font-bold uppercase text-slate-500">${req.category === 'transfers' ? 'Reintegro / Acreditación' : 'Pago de Resumen'}</div>
+              <div class="font-extrabold text-nxOrange-600">$${req.amount || '0'} <span class="text-xs font-normal text-slate-500">(${req.paymentType || 'N/A'})</span></div>
+            </td>
+            <td class="p-4 max-w-xs">
+              ${banksDisplay}
+            </td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${req.status}</span>
+            </td>
+            <td class="p-4">
+              <input type="url" id="url-${req.id}" value="${req.paymentUrl || ''}" placeholder="https://link.naranjax.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500 transition">
+            </td>
+            <td class="p-4 text-right">
+              <button onclick="adminApp.savePaymentUrl('${req.id}')" class="bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition shadow-sm">
+                Guardar
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      },
+
+      savePaymentUrl(id) {
+        const urlInput = document.getElementById(`url-${id}`);
+        const newUrl = urlInput.value.trim();
+        let requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
+        
+        requests = requests.map(req => {
+          if (req.id === id) {
+            req.paymentUrl = newUrl;
+            if (newUrl) req.status = 'Link Generado';
+          }
+          return req;
+        });
+
+        localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
+        alert(`¡Enlace guardado correctamente para el pedido ${id}!`);
+        this.loadRequests();
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => adminApp.init());
+  </script>
+</body>
+</html>
