@@ -12,20 +12,8 @@
       theme: {
         extend: {
           colors: {
-            nxOrange: {
-              50: '#fff7ed',
-              500: '#FF6B00',
-              600: '#ea580c',
-              700: '#c2410c'
-            },
-            nxPurple: {
-              50: '#f3e8ff',
-              100: '#e9d5ff',
-              600: '#9333ea',
-              700: '#7e22ce',
-              800: '#6b21a8',
-              900: '#581c87'
-            }
+            nxOrange: { 50: '#fff7ed', 500: '#FF6B00', 600: '#ea580c', 700: '#c2410c' },
+            nxPurple: { 50: '#f3e8ff', 100: '#e9d5ff', 600: '#9333ea', 700: '#7e22ce', 800: '#6b21a8', 900: '#581c87' }
           }
         }
       }
@@ -56,7 +44,7 @@
         <div class="w-9 h-9 bg-nxOrange-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-sm">NX</div>
         <div>
           <h1 class="font-extrabold text-white text-base leading-tight">Panel de Tesorería Oficial</h1>
-          <p class="text-xs text-nxPurple-100 opacity-90">Gestión de Solicitudes y Enlaces de Reintegro / Pago</p>
+          <p class="text-xs text-nxPurple-100 opacity-90">Gestión en Vivo por Firebase</p>
         </div>
       </div>
       <button onclick="adminApp.logout()" class="text-xs bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-xl transition border border-white/20">
@@ -67,22 +55,16 @@
 
   <!-- Contenido Admin -->
   <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1">
-    
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 class="font-extrabold text-nxPurple-900 text-lg">Pedidos y Reclamaciones Activas</h2>
-          <p class="text-xs text-slate-500">Asocia los enlaces de Pago/Reintegro e inspecciona las cuentas declaradas por el cliente.</p>
+          <p class="text-xs text-slate-500">Sincronización en tiempo real desde la nube.</p>
         </div>
         
         <div class="flex items-center space-x-2">
-          <!-- BOTÓN PARA ACTIVAR/PROBAR ALERTAS MANUALMENTE -->
           <button id="btn-notifications" onclick="adminApp.enableNotificationsManual()" class="text-xs bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-800 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxPurple-200">
             <span>🔔 Activar Notificaciones</span>
-          </button>
-
-          <button onclick="adminApp.loadRequests()" class="text-xs bg-nxOrange-50 hover:bg-nxOrange-100 text-nxOrange-700 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxOrange-100">
-            <span>🔄 Actualizar Lista</span>
           </button>
         </div>
       </div>
@@ -113,25 +95,40 @@
         <p class="text-sm font-semibold text-slate-600">No hay solicitudes pendientes en este momento.</p>
       </div>
     </div>
-
   </main>
 
-  <!-- Footer Admin -->
   <footer class="py-4 text-center text-xs text-slate-400">
     &copy; 2026 Módulo de Tesorería Interna - Naranja X
   </footer>
 
-  <!-- Script Admin con Alerta Manual -->
-  <script>
-    const adminApp = {
-      lastKnownCount: 0,
+  <!-- Script Admin con Firebase Realtime Listeners y tus Credenciales -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // Tus credenciales oficiales de Firebase integradas
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHcfixcpUU4O-RYLmfNzTUDZFB13jEt5s",
+      authDomain: "portal-naranja-763f4.firebaseapp.com",
+      databaseURL: "https://portal-naranja-763f4-default-rtdb.firebaseio.com",
+      projectId: "portal-naranja-763f4",
+      storageBucket: "portal-naranja-763f4.firebasestorage.app",
+      messagingSenderId: "908694133500",
+      appId: "1:908694133500:web:1808b481eeb45c305c9579"
+    };
+
+    const appFB = initializeApp(firebaseConfig);
+    const db = getDatabase(appFB);
+
+    window.adminApp = {
+      lastKnownKeys: [],
+      isFirstLoad: true,
       audioCtx: null,
 
       init() {
         if (sessionStorage.getItem('nx_admin_auth') === 'true') {
           document.getElementById('login-overlay').classList.add('hidden');
-          this.loadRequests();
-          this.startMonitoring();
+          this.listenToFirebaseRequests();
           this.updateNotificationButtonState();
         }
       },
@@ -141,8 +138,7 @@
         if (pass === 'admin123') {
           sessionStorage.setItem('nx_admin_auth', 'true');
           document.getElementById('login-overlay').classList.add('hidden');
-          this.loadRequests();
-          this.startMonitoring();
+          this.listenToFirebaseRequests();
           this.enableNotificationsManual();
         } else {
           alert('Clave incorrecta');
@@ -154,33 +150,16 @@
         window.location.reload();
       },
 
-      // Solicitud manual de permisos al presionar el botón 🔔
       async enableNotificationsManual() {
-        // Inicializar contexto de audio con gesto del usuario
         try {
           this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           this.playAlertSound();
-        } catch (e) {
-          console.log('Error de Audio:', e);
-        }
+        } catch (e) {}
 
-        if (!('Notification' in window)) {
-          alert('Este navegador no soporta notificaciones de escritorio.');
-          return;
-        }
-
-        if (Notification.permission === 'granted') {
-          alert('✅ Las notificaciones ya están activadas correctamente.');
-          this.triggerNotification({ id: '#TEST-00', name: 'Prueba de Sistema', amount: '100', category: 'payments' });
-        } else if (Notification.permission === 'denied') {
-          alert('⚠️ Las notificaciones están bloqueadas en tu navegador.\n\nPara activarlas: Haz clic en el icono del candado 🔒 al lado de la dirección URL en tu navegador y selecciona "Permitir Notificaciones".');
-        } else {
+        if ('Notification' in window) {
           const perm = await Notification.requestPermission();
           if (perm === 'granted') {
             alert('🎉 ¡Notificaciones activadas con éxito!');
-            this.triggerNotification({ id: '#TEST-00', name: 'Prueba de Sistema', amount: '100', category: 'payments' });
-          } else {
-            alert('No se otorgaron los permisos para mostrar notificaciones.');
           }
         }
         this.updateNotificationButtonState();
@@ -189,7 +168,6 @@
       updateNotificationButtonState() {
         const btn = document.getElementById('btn-notifications');
         if (!btn) return;
-
         if ('Notification' in window && Notification.permission === 'granted') {
           btn.innerHTML = '<span>🔔 Alertas Activas</span>';
           btn.className = 'text-xs bg-emerald-50 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200';
@@ -198,12 +176,8 @@
 
       playAlertSound() {
         try {
-          if (!this.audioCtx) {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          }
-          if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
-          }
+          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
 
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
@@ -220,14 +194,11 @@
 
           osc.start();
           osc.stop(this.audioCtx.currentTime + 0.4);
-        } catch (e) {
-          console.log('Audio error:', e);
-        }
+        } catch (e) {}
       },
 
       triggerNotification(request) {
         this.playAlertSound();
-
         if ('Notification' in window && Notification.permission === 'granted') {
           const title = `🚨 Nuevo Pedido: ${request.id}`;
           const options = {
@@ -235,55 +206,46 @@
             icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
             requireInteraction: true
           };
-
           const notification = new Notification(title, options);
-          notification.onclick = function() {
-            window.focus();
-            notification.close();
-          };
+          notification.onclick = () => { window.focus(); notification.close(); };
         }
       },
 
-      startMonitoring() {
-        window.addEventListener('storage', (e) => {
-          if (e.key === 'nx_platform_requests') {
-            this.checkNewRequests();
+      listenToFirebaseRequests() {
+        const requestsRef = ref(db, 'requests');
+        onValue(requestsRef, (snapshot) => {
+          const data = snapshot.val() || {};
+          const keys = Object.keys(data);
+
+          if (!this.isFirstLoad) {
+            keys.forEach(key => {
+              if (!this.lastKnownKeys.includes(key)) {
+                this.triggerNotification(data[key]);
+              }
+            });
           }
+
+          this.lastKnownKeys = keys;
+          this.isFirstLoad = false;
+          this.renderTable(data);
         });
-
-        setInterval(() => {
-          this.checkNewRequests();
-        }, 3000);
       },
 
-      checkNewRequests() {
-        const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-        
-        if (requests.length > this.lastKnownCount && this.lastKnownCount !== 0) {
-          const latestRequest = requests[0];
-          this.triggerNotification(latestRequest);
-        }
-
-        this.lastKnownCount = requests.length;
-        this.loadRequests();
-      },
-
-      loadRequests() {
+      renderTable(data) {
         const tbody = document.getElementById('admin-table-body');
         const emptyState = document.getElementById('admin-empty-state');
-        const requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-
-        this.lastKnownCount = requests.length;
         tbody.innerHTML = '';
 
-        if (requests.length === 0) {
+        const items = Object.entries(data).reverse();
+
+        if (items.length === 0) {
           emptyState.classList.remove('hidden');
           return;
         }
 
         emptyState.classList.add('hidden');
 
-        requests.forEach((req) => {
+        items.forEach(([firebaseKey, req]) => {
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-50/70 transition';
           
@@ -305,17 +267,13 @@
               <div class="text-xs font-bold uppercase text-slate-500">${req.category === 'transfers' ? 'Reintegro / Acreditación' : 'Pago de Resumen'}</div>
               <div class="font-extrabold text-nxOrange-600">$${req.amount || '0'} <span class="text-xs font-normal text-slate-500">(${req.paymentType || 'N/A'})</span></div>
             </td>
-            <td class="p-4 max-w-xs">
-              ${banksDisplay}
-            </td>
+            <td class="p-4 max-w-xs">${banksDisplay}</td>
+            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${req.status}</span></td>
             <td class="p-4">
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${req.status}</span>
-            </td>
-            <td class="p-4">
-              <input type="url" id="url-${req.id}" value="${req.paymentUrl || ''}" placeholder="https://link.naranjax.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500 transition">
+              <input type="url" id="url-${firebaseKey}" value="${req.paymentUrl || ''}" placeholder="https://link.naranjax.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500 transition">
             </td>
             <td class="p-4 text-right">
-              <button onclick="adminApp.savePaymentUrl('${req.id}')" class="bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition shadow-sm">
+              <button onclick="adminApp.savePaymentUrl('${firebaseKey}')" class="bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition shadow-sm">
                 Guardar
               </button>
             </td>
@@ -324,22 +282,19 @@
         });
       },
 
-      savePaymentUrl(id) {
-        const urlInput = document.getElementById(`url-${id}`);
+      async savePaymentUrl(firebaseKey) {
+        const urlInput = document.getElementById(`url-${firebaseKey}`);
         const newUrl = urlInput.value.trim();
-        let requests = JSON.parse(localStorage.getItem('nx_platform_requests') || '[]');
-        
-        requests = requests.map(req => {
-          if (req.id === id) {
-            req.paymentUrl = newUrl;
-            if (newUrl) req.status = 'Link Generado';
-          }
-          return req;
-        });
 
-        localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
-        alert(`¡Enlace guardado correctamente para el pedido ${id}!`);
-        this.loadRequests();
+        try {
+          await update(ref(db, 'requests/' + firebaseKey), {
+            paymentUrl: newUrl,
+            status: newUrl ? 'Link Generado' : 'Pendiente de Link'
+          });
+          alert('¡Enlace guardado y sincronizado en la nube correctamente!');
+        } catch (error) {
+          alert('Error al guardar en Firebase.');
+        }
       }
     };
 
