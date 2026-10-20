@@ -18,6 +18,19 @@ class App {
     this.updateScreen();
   }
 
+  // Formateador de moneda en pesos argentinos (ej: 350000 -> 350.000)
+  formatNumberToAR(numStr) {
+    const cleanNum = numStr.toString().replace(/\D/g, '');
+    if (!cleanNum) return '';
+    return new Intl.NumberFormat('de-DE').format(cleanNum);
+  }
+
+  formatCurrencyInput(inputElement) {
+    const cursorPosition = inputElement.selectionStart;
+    const formatted = this.formatNumberToAR(inputElement.value);
+    inputElement.value = formatted;
+  }
+
   goToScreen(screenNumber) {
     this.state.currentScreen = screenNumber;
     this.updateScreen();
@@ -62,12 +75,20 @@ class App {
 
   handleClientSubmit(e) {
     e.preventDefault();
+    const nameInput = document.getElementById('client-name').value.trim();
+    
     this.state.client = {
-      name: document.getElementById('client-name').value,
-      dni: document.getElementById('client-dni').value,
-      phone: document.getElementById('client-phone').value,
-      email: document.getElementById('client-email').value
+      name: nameInput,
+      dni: document.getElementById('client-dni').value.trim(),
+      phone: document.getElementById('client-phone').value.trim(),
+      email: document.getElementById('client-email').value.trim()
     };
+
+    // Actualizar dinámicamente el título con el nombre del titular
+    const titleHeading = document.getElementById('payment-title-heading');
+    if (titleHeading) {
+      titleHeading.innerText = `Pago de Resumen a nombre de ${this.state.client.name}`;
+    }
 
     this.goToScreen(3);
   }
@@ -113,14 +134,15 @@ class App {
 
   // --- FLUJO B: PAGOS / RESUMEN ---
   generatePaymentOrder() {
-    const amount = document.getElementById('pay-amount').value;
+    const rawAmount = document.getElementById('pay-amount').value.trim();
     const paymentType = document.getElementById('pay-type').value;
 
-    if (!amount || amount <= 0) {
+    if (!rawAmount) {
       alert('Por favor, ingresa un monto válido a abonar.');
       return;
     }
 
+    const formattedAmount = this.formatNumberToAR(rawAmount);
     const orderId = '#NX-' + Math.floor(1000 + Math.random() * 9000);
     this.state.currentOrderId = orderId;
 
@@ -131,7 +153,7 @@ class App {
       phone: this.state.client.phone || 'S/D',
       email: this.state.client.email || 'S/D',
       category: 'payments',
-      amount: amount,
+      amount: formattedAmount,
       paymentType: paymentType,
       paymentUrl: '',
       status: 'Pendiente de Link',
@@ -143,7 +165,9 @@ class App {
     localStorage.setItem('nx_platform_requests', JSON.stringify(requests));
 
     document.getElementById('display-order-id').innerText = orderId;
+    document.getElementById('display-order-amount').innerText = `$${formattedAmount}`;
 
+    // Cambio fluido a la pantalla de espera
     document.getElementById('pay-form-view').classList.add('hidden');
     document.getElementById('pay-waiting-view').classList.remove('hidden');
   }
@@ -153,7 +177,6 @@ class App {
     const currentReq = requests.find(r => r.id === this.state.currentOrderId);
 
     if (currentReq && currentReq.paymentUrl && currentReq.paymentUrl.trim() !== '') {
-      // Mensaje actualizado según requerimiento
       alert('Ya se Generó tu Link de Pago');
       window.location.href = currentReq.paymentUrl;
     } else {
@@ -163,13 +186,14 @@ class App {
 
   // --- FLUJO C: TRANSFERENCIAS / COMPRAS ---
   submitClaim() {
-    const amount = document.getElementById('claim-amount').value;
+    const rawAmount = document.getElementById('claim-amount').value.trim();
 
-    if (!amount || amount <= 0) {
+    if (!rawAmount) {
       alert('Por favor, ingresa un monto válido para el reclamo.');
       return;
     }
 
+    const formattedAmount = this.formatNumberToAR(rawAmount);
     const orderId = '#TR-' + Math.floor(1000 + Math.random() * 9000);
 
     const newClaim = {
@@ -179,7 +203,7 @@ class App {
       phone: this.state.client.phone || 'S/D',
       email: this.state.client.email || 'S/D',
       category: 'transfers',
-      amount: amount,
+      amount: formattedAmount,
       paymentType: 'Reclamo de Saldo',
       paymentUrl: '',
       status: 'En Auditoría Tesorería',
@@ -205,7 +229,7 @@ class App {
 
   verifyAdminPass() {
     const pass = document.getElementById('admin-pass-input').value;
-    if (pass === 'admin123') { // Clave por defecto
+    if (pass === 'admin123') {
       sessionStorage.setItem('nx_admin_auth', 'true');
       window.location.href = 'admin.html';
     } else {
