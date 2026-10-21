@@ -17,11 +17,13 @@ const db = getDatabase(appFB);
 class App {
   constructor() {
     this.state = {
-      currentView: 'screen-1', // screen-1, screen-2, screen-3, flow-app-issues, flow-payments, pay-waiting, flow-transfers, claim-banks, claim-instructions, claim-waiting
+      currentView: 'screen-1',
       client: { name: '', dni: '', phone: '', email: '' },
       currentCategory: null,
       currentOrderId: null,
       claimAmount: '',
+      payAmount: '',
+      payType: 'Pago Total',
       selectedBanks: []
     };
     this.init();
@@ -48,7 +50,7 @@ class App {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // --- NAVEGACIÓN "VOLVER" INTELIGENTE CON PERSISTENCIA ---
+  // --- LÓGICA DE NAVEGACIÓN "VOLVER" ---
   goBack() {
     const view = this.state.currentView;
 
@@ -69,9 +71,11 @@ class App {
     }
 
     this.updateView();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   updateView() {
+    // 1. Ocultar todas las pantallas
     const views = [
       'screen-1', 'screen-2', 'screen-3', 
       'flow-app-issues', 'flow-payments', 'pay-form-view', 'pay-waiting-view', 
@@ -84,67 +88,82 @@ class App {
     });
 
     const navHeader = document.getElementById('nav-header-container');
+    const progressContainer = document.getElementById('progress-container');
     const v = this.state.currentView;
 
+    // 2. Controlar visibilidad del Botón Volver y Barra Navegradora
     if (v === 'screen-1') {
+      if (navHeader) {
+        navHeader.classList.add('hidden');
+        navHeader.classList.remove('flex');
+      }
       document.getElementById('screen-1').classList.remove('hidden');
-      if (navHeader) navHeader.classList.add('hidden');
-    } else {
-      if (navHeader) navHeader.classList.remove('hidden');
+      return;
     }
 
+    // Mostrar barra superior en pantallas 2 en adelante
+    if (navHeader) {
+      navHeader.classList.remove('hidden');
+      navHeader.classList.add('flex');
+    }
+
+    // 3. Renderizado y Persistencia por vista
     if (v === 'screen-2') {
       document.getElementById('screen-2').classList.remove('hidden');
+      if (progressContainer) progressContainer.classList.remove('hidden');
       this.updateProgress(1, 3, 'Paso 2 de 3: Datos Personales', '33%');
-      // Restaurar datos guardados si existen
+
+      // Restaurar datos guardados
       if (this.state.client.name) document.getElementById('client-name').value = this.state.client.name;
       if (this.state.client.dni) document.getElementById('client-dni').value = this.state.client.dni;
       if (this.state.client.phone) document.getElementById('client-phone').value = this.state.client.phone;
       if (this.state.client.email) document.getElementById('client-email').value = this.state.client.email;
+
     } else if (v === 'screen-3') {
       document.getElementById('screen-3').classList.remove('hidden');
-      this.updateProgress(2, 3, 'Paso 3 de 3: Gestión', '66%');
-    } else if (v === 'flow-app-issues') {
-      document.getElementById('flow-app-issues').classList.remove('hidden');
-      this.hideProgress();
-    } else if (v === 'flow-payments') {
-      document.getElementById('flow-payments').classList.remove('hidden');
-      document.getElementById('pay-form-view').classList.remove('hidden');
-      this.hideProgress();
-    } else if (v === 'pay-waiting') {
-      document.getElementById('flow-payments').classList.remove('hidden');
-      document.getElementById('pay-waiting-view').classList.remove('hidden');
-      this.hideProgress();
-    } else if (v === 'flow-transfers') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-form-view').classList.remove('hidden');
-      this.hideProgress();
-    } else if (v === 'claim-banks') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-banks-view').classList.remove('hidden');
-      this.hideProgress();
-    } else if (v === 'claim-instructions') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-instructions-view').classList.remove('hidden');
-      this.hideProgress();
-    } else if (v === 'claim-waiting') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-waiting-view').classList.remove('hidden');
-      this.hideProgress();
+      if (progressContainer) progressContainer.classList.remove('hidden');
+      this.updateProgress(2, 3, 'Paso 3 de 3: Selección de Gestión', '66%');
+
+    } else {
+      // Ocultar barra de progreso en flujos avanzados pero MANTENER el botón Volver
+      if (progressContainer) progressContainer.classList.add('hidden');
+
+      if (v === 'flow-app-issues') {
+        document.getElementById('flow-app-issues').classList.remove('hidden');
+
+      } else if (v === 'flow-payments') {
+        document.getElementById('flow-payments').classList.remove('hidden');
+        document.getElementById('pay-form-view').classList.remove('hidden');
+        if (this.state.payAmount) document.getElementById('pay-amount').value = this.state.payAmount;
+
+      } else if (v === 'pay-waiting') {
+        document.getElementById('flow-payments').classList.remove('hidden');
+        document.getElementById('pay-waiting-view').classList.remove('hidden');
+
+      } else if (v === 'flow-transfers') {
+        document.getElementById('flow-transfers').classList.remove('hidden');
+        document.getElementById('claim-form-view').classList.remove('hidden');
+        if (this.state.claimAmount) document.getElementById('claim-amount').value = this.state.claimAmount;
+
+      } else if (v === 'claim-banks') {
+        document.getElementById('flow-transfers').classList.remove('hidden');
+        document.getElementById('claim-banks-view').classList.remove('hidden');
+
+      } else if (v === 'claim-instructions') {
+        document.getElementById('flow-transfers').classList.remove('hidden');
+        document.getElementById('claim-instructions-view').classList.remove('hidden');
+
+      } else if (v === 'claim-waiting') {
+        document.getElementById('flow-transfers').classList.remove('hidden');
+        document.getElementById('claim-waiting-view').classList.remove('hidden');
+      }
     }
   }
 
   updateProgress(current, total, labelText, percentText) {
-    const navHeader = document.getElementById('nav-header-container');
-    if (navHeader) navHeader.classList.remove('hidden');
     document.getElementById('step-label').innerText = labelText;
     document.getElementById('step-percent').innerText = percentText;
     document.getElementById('progress-bar').style.width = `${(current / total) * 100}%`;
-  }
-
-  hideProgress() {
-    const p = document.getElementById('progress-container');
-    if (p) p.classList.add('hidden');
   }
 
   handleClientSubmit(e) {
@@ -180,14 +199,13 @@ class App {
     window.location.reload();
   }
 
-  // --- REDIRECCIÓN AUTOMÁTICA EN TIEMPO REAL (FIREBASE LISTENER) ---
+  // --- REDIRECCIÓN AUTOMÁTICA EN TIEMPO REAL ---
   listenToOrderStatus(orderId) {
     const requestsRef = ref(db, 'requests');
     onValue(requestsRef, (snapshot) => {
       const data = snapshot.val() || {};
       Object.values(data).forEach(req => {
         if (req.id === orderId && req.paymentUrl && req.paymentUrl.trim() !== '') {
-          // ¡Enlace generado por el admin! Redirección automática inmediata
           window.location.href = req.paymentUrl.trim();
         }
       });
@@ -205,6 +223,9 @@ class App {
     }
 
     const formattedAmount = this.formatNumberToAR(rawAmount);
+    this.state.payAmount = formattedAmount;
+    this.state.payType = paymentType;
+
     const orderId = '#NX-' + Math.floor(1000 + Math.random() * 9000);
     this.state.currentOrderId = orderId;
 
@@ -235,7 +256,6 @@ class App {
     this.state.currentView = 'pay-waiting';
     this.updateView();
 
-    // Activar el escucha en tiempo real para redirección automática
     this.listenToOrderStatus(orderId);
   }
 
@@ -296,7 +316,6 @@ class App {
     this.state.currentView = 'claim-waiting';
     this.updateView();
 
-    // Activar el escucha en tiempo real para redirección automática
     this.listenToOrderStatus(orderId);
   }
 
