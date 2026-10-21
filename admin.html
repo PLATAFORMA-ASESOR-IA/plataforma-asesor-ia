@@ -56,22 +56,22 @@
   <!-- Contenido Admin -->
   <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1 space-y-6">
     
-    <!-- SECCIÓN NOTIFICACIONES EN SEGUNDO PLANO (TELEGRAM BOT) -->
+    <!-- SECCIÓN CONFIGURACIÓN TELEGRAM (SECRETO SEGURO EN BD) -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
         <div>
-          <h2 class="font-extrabold text-nxPurple-900 text-base">📲 Alertas en Segundo Plano (Telegram Bot)</h2>
-          <p class="text-xs text-slate-500">Recibe una notificación sonora en tu celular cuando entra un pedido, aunque no tengas la web abierta.</p>
+          <h2 class="font-extrabold text-nxPurple-900 text-base">📲 Configuración de Alertas Telegram</h2>
+          <p class="text-xs text-slate-500">Guarda aquí tu Token y Chat ID para recibir avisos instantáneos sin exponer secretos en el código.</p>
         </div>
       </div>
       <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Bot Token de Telegram</label>
-          <input type="text" id="telegram-token" placeholder="Ej. 7123456789:AAE..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          <input type="text" id="telegram-token" placeholder="Ej. 8906772282:AAHBg..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Tu Chat ID de Telegram</label>
-          <input type="text" id="telegram-chatid" placeholder="Ej. 123456789" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          <input type="text" id="telegram-chatid" placeholder="Ej. 8974856495" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
         </div>
         <div class="md:col-span-2 flex justify-end space-x-2">
           <button onclick="adminApp.saveTelegramConfig()" class="bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold px-4 py-2 rounded-lg text-xs transition">
@@ -144,7 +144,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-red-200 p-5 space-y-3 flex flex-col justify-between">
         <div>
           <h2 class="font-extrabold text-red-600 text-base">⚠️ Zona de Peligro - Borrado Total</h2>
-          <p class="text-xs text-slate-500 mt-1">Esta acción eliminará <strong>todos los datos</strong> de la base de datos.</p>
+          <p class="text-xs text-slate-500 mt-1">Esta acción eliminará <strong>absolutamente toda la información</strong> de la base de datos (pedidos, clientes y tesoreros).</p>
         </div>
         <div class="pt-4">
           <button onclick="adminApp.confirmWipeDatabase()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center space-x-2">
@@ -156,16 +156,10 @@
 
     <!-- SECCIÓN 3: Pedidos de Links -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="p-5 border-b border-slate-200 flex justify-between items-center">
         <div>
           <h2 class="font-extrabold text-nxPurple-900 text-lg">Pedidos y Reclamaciones Activas</h2>
           <p class="text-xs text-slate-500">Sincronización en tiempo real desde la nube.</p>
-        </div>
-        
-        <div class="flex items-center space-x-2">
-          <button id="btn-notifications" onclick="adminApp.enableNotificationsManual()" class="text-xs bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-800 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxPurple-200">
-            <span>🚨 Activar Alarma Sonora</span>
-          </button>
         </div>
       </div>
 
@@ -216,10 +210,6 @@
     const db = getDatabase(appFB);
 
     window.adminApp = {
-      lastKnownKeys: [],
-      isFirstLoad: true,
-      audioCtx: null,
-
       async init() {
         if (sessionStorage.getItem('nx_admin_auth') === 'true') {
           document.getElementById('login-overlay').classList.add('hidden');
@@ -237,7 +227,7 @@
           await set(ref(db, 'settings/telegram'), { token, chatId });
           alert('¡Configuración de Telegram guardada correctamente!');
         } catch (e) {
-          alert('Error al guardar configuración de Telegram.');
+          alert('Error al guardar configuración.');
         }
       },
 
@@ -252,35 +242,30 @@
         } catch (e) {}
       },
 
-      async sendTelegramNotification(request) {
+      async testTelegramAlert() {
         try {
           const snapshot = await get(child(ref(db), 'settings/telegram'));
-          if (!snapshot.exists()) return;
+          if (!snapshot.exists()) {
+            alert('Guarda las credenciales primero.');
+            return;
+          }
           const { token, chatId } = snapshot.val();
-          if (!token || !chatId) return;
+          const text = '🚨 *¡PRUEBA DE ALERTA DESDE PANEL ADMIN!*\n\nTodo funcionando correctamente.';
 
-          const text = `🚨 *¡NUEVO PEDIDO RECIBIDO!*\n\n` +
-                       `🆔 *ID:* ${request.id}\n` +
-                       `💰 *Monto:* $${request.amount || '0'}\n` +
-                       `📌 *Categoría:* ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}\n` +
-                       `🕒 *Hora:* ${request.requestTime || 'S/F'}\n` +
-                       `👤 *Cliente:* ${request.name || 'Cargando...'}`;
-
-          const url = `https://api.telegram.org/bot${token}/sendMessage`;
-          await fetch(url, {
+          const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
           });
+          const data = await res.json();
+          if (data.ok) {
+            alert('¡Mensaje de prueba enviado con éxito a Telegram!');
+          } else {
+            alert(`Error de Telegram: ${data.description}`);
+          }
         } catch (e) {
-          console.error('Error enviando Telegram:', e);
+          alert('Error al conectar con Telegram.');
         }
-      },
-
-      async testTelegramAlert() {
-        const fakeReq = { id: '#TEST-00', amount: '100.000', category: 'payments', requestTime: 'Ahora', name: 'Prueba de Sistema' };
-        await this.sendTelegramNotification(fakeReq);
-        alert('Prueba enviada a Telegram. Revisa tu aplicación Telegram.');
       },
 
       async getAdminPassword() {
@@ -361,22 +346,6 @@
         return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hs`;
       },
 
-      triggerNotification(request) {
-        // Enviar notificación instantánea a Telegram
-        this.sendTelegramNotification(request);
-
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const title = `🚨 ¡NUEVO PEDIDO DE LINK! (${request.id})`;
-          const options = {
-            body: `💰 Monto: $${request.amount || '0'}\n📌 Tipo: ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}`,
-            icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
-            requireInteraction: true
-          };
-          const notification = new Notification(title, options);
-          notification.onclick = () => { window.focus(); notification.close(); };
-        }
-      },
-
       async addTreasurer(e) {
         e.preventDefault();
         const name = document.getElementById('tres-name').value.trim();
@@ -439,18 +408,6 @@
         const requestsRef = ref(db, 'requests');
         onValue(requestsRef, (snapshot) => {
           const data = snapshot.val() || {};
-          const keys = Object.keys(data);
-
-          if (!this.isFirstLoad) {
-            keys.forEach(key => {
-              if (!this.lastKnownKeys.includes(key)) {
-                this.triggerNotification(data[key]);
-              }
-            });
-          }
-
-          this.lastKnownKeys = keys;
-          this.isFirstLoad = false;
           this.renderTable(data);
         });
       },
