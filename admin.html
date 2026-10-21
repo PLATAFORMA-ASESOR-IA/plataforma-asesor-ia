@@ -56,6 +56,34 @@
   <!-- Contenido Admin -->
   <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1 space-y-6">
     
+    <!-- SECCIÓN NOTIFICACIONES EN SEGUNDO PLANO (TELEGRAM BOT) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+        <div>
+          <h2 class="font-extrabold text-nxPurple-900 text-base">📲 Alertas en Segundo Plano (Telegram Bot)</h2>
+          <p class="text-xs text-slate-500">Recibe una notificación sonora en tu celular cuando entra un pedido, aunque no tengas la web abierta.</p>
+        </div>
+      </div>
+      <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Bot Token de Telegram</label>
+          <input type="text" id="telegram-token" placeholder="Ej. 7123456789:AAE..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Tu Chat ID de Telegram</label>
+          <input type="text" id="telegram-chatid" placeholder="Ej. 123456789" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+        </div>
+        <div class="md:col-span-2 flex justify-end space-x-2">
+          <button onclick="adminApp.saveTelegramConfig()" class="bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold px-4 py-2 rounded-lg text-xs transition">
+            Guardar Configuración Telegram
+          </button>
+          <button onclick="adminApp.testTelegramAlert()" class="bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold px-4 py-2 rounded-lg text-xs transition">
+            Probar Alerta Telegram
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- SECCIÓN 1: Cargar Cuentas y Tesoreros Oficiales -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-200 bg-slate-50">
@@ -64,7 +92,6 @@
       </div>
 
       <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Formulario Cargar Tesorero -->
         <form onsubmit="adminApp.addTreasurer(event)" class="space-y-3 bg-nxPurple-50/50 p-4 rounded-xl border border-nxPurple-100">
           <h3 class="font-bold text-xs uppercase tracking-wider text-nxPurple-900">Agregar Nueva Cuenta</h3>
           <div>
@@ -88,23 +115,17 @@
           </button>
         </form>
 
-        <!-- Lista de Cuentas Actuales -->
         <div class="md:col-span-2 space-y-3">
           <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Cuentas Activas Visibles en la App</h3>
-          <div id="admin-treasurers-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-            <!-- Inyectado dinámicamente -->
-          </div>
+          <div id="admin-treasurers-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto"></div>
         </div>
       </div>
     </div>
 
     <!-- SECCIÓN 2: Seguridad, Cambio de Contraseña y Borrado Total -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Cambiar Contraseña -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
         <h2 class="font-extrabold text-nxPurple-900 text-base">🔐 Cambiar Contraseña de Administrador</h2>
-        <p class="text-xs text-slate-500">Actualiza tu clave de acceso. La nueva contraseña quedará guardada de forma segura en la nube.</p>
-        
         <form onsubmit="adminApp.changePassword(event)" class="space-y-3 pt-2">
           <div>
             <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Contraseña Actual</label>
@@ -120,11 +141,10 @@
         </form>
       </div>
 
-      <!-- Zona de Peligro: Borrar Todos los Datos -->
       <div class="bg-white rounded-2xl shadow-sm border border-red-200 p-5 space-y-3 flex flex-col justify-between">
         <div>
           <h2 class="font-extrabold text-red-600 text-base">⚠️ Zona de Peligro - Borrado Total</h2>
-          <p class="text-xs text-slate-500 mt-1">Esta acción eliminará <strong>absolutamente toda la información</strong> de la base de datos (pedidos, clientes, cuentas de tesorería). No se puede deshacer.</p>
+          <p class="text-xs text-slate-500 mt-1">Esta acción eliminará <strong>todos los datos</strong> de la base de datos.</p>
         </div>
         <div class="pt-4">
           <button onclick="adminApp.confirmWipeDatabase()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center space-x-2">
@@ -149,7 +169,6 @@
         </div>
       </div>
 
-      <!-- Tabla de Pedidos con Fecha y Hora -->
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
@@ -164,13 +183,10 @@
               <th class="p-4 font-bold text-right">Acción</th>
             </tr>
           </thead>
-          <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700">
-            <!-- Inyectado dinámicamente -->
-          </tbody>
+          <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
         </table>
       </div>
 
-      <!-- Estado Vacío -->
       <div id="admin-empty-state" class="hidden p-12 text-center space-y-3">
         <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-full mx-auto flex items-center justify-center text-xl">📭</div>
         <p class="text-sm font-semibold text-slate-600">No hay solicitudes pendientes en este momento.</p>
@@ -182,7 +198,6 @@
     &copy; 2026 Módulo de Tesorería Interna - Naranja X
   </footer>
 
-  <!-- Script Admin con Seguridad Avanzada -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, update, push, remove, get, child, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -205,13 +220,67 @@
       isFirstLoad: true,
       audioCtx: null,
 
-      init() {
+      async init() {
         if (sessionStorage.getItem('nx_admin_auth') === 'true') {
           document.getElementById('login-overlay').classList.add('hidden');
           this.listenToFirebaseRequests();
           this.listenToTreasurers();
-          this.updateNotificationButtonState();
+          this.loadTelegramConfig();
         }
+      },
+
+      async saveTelegramConfig() {
+        const token = document.getElementById('telegram-token').value.trim();
+        const chatId = document.getElementById('telegram-chatid').value.trim();
+
+        try {
+          await set(ref(db, 'settings/telegram'), { token, chatId });
+          alert('¡Configuración de Telegram guardada correctamente!');
+        } catch (e) {
+          alert('Error al guardar configuración de Telegram.');
+        }
+      },
+
+      async loadTelegramConfig() {
+        try {
+          const snapshot = await get(child(ref(db), 'settings/telegram'));
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            document.getElementById('telegram-token').value = data.token || '';
+            document.getElementById('telegram-chatid').value = data.chatId || '';
+          }
+        } catch (e) {}
+      },
+
+      async sendTelegramNotification(request) {
+        try {
+          const snapshot = await get(child(ref(db), 'settings/telegram'));
+          if (!snapshot.exists()) return;
+          const { token, chatId } = snapshot.val();
+          if (!token || !chatId) return;
+
+          const text = `🚨 *¡NUEVO PEDIDO RECIBIDO!*\n\n` +
+                       `🆔 *ID:* ${request.id}\n` +
+                       `💰 *Monto:* $${request.amount || '0'}\n` +
+                       `📌 *Categoría:* ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}\n` +
+                       `🕒 *Hora:* ${request.requestTime || 'S/F'}\n` +
+                       `👤 *Cliente:* ${request.name || 'Cargando...'}`;
+
+          const url = `https://api.telegram.org/bot${token}/sendMessage`;
+          await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
+          });
+        } catch (e) {
+          console.error('Error enviando Telegram:', e);
+        }
+      },
+
+      async testTelegramAlert() {
+        const fakeReq = { id: '#TEST-00', amount: '100.000', category: 'payments', requestTime: 'Ahora', name: 'Prueba de Sistema' };
+        await this.sendTelegramNotification(fakeReq);
+        alert('Prueba enviada a Telegram. Revisa tu aplicación Telegram.');
       },
 
       async getAdminPassword() {
@@ -232,7 +301,7 @@
           document.getElementById('login-overlay').classList.add('hidden');
           this.listenToFirebaseRequests();
           this.listenToTreasurers();
-          this.enableNotificationsManual();
+          this.loadTelegramConfig();
         } else {
           alert('Clave incorrecta');
         }
@@ -249,41 +318,34 @@
           return;
         }
 
-        if (!newInput || newInput.length < 4) {
-          alert('⚠️ La nueva contraseña debe tener al menos 4 caracteres.');
-          return;
-        }
-
         try {
           await set(ref(db, 'settings/adminPassword'), newInput);
-          alert('🎉 ¡Contraseña actualizada con éxito! Quedó guardada de forma segura.');
+          alert('🎉 Contraseña actualizada con éxito.');
           document.getElementById('current-pass').value = '';
           document.getElementById('new-pass').value = '';
         } catch (error) {
-          alert('Error al actualizar la contraseña.');
+          alert('Error al actualizar contraseña.');
         }
       },
 
       async confirmWipeDatabase() {
-        const pass = prompt('🔒 ACCIÓN CRÍTICA:\nPara borrar TODOS los datos de la base de datos (pedidos, clientes y tesoreros), introduce tu contraseña de administrador:');
+        const pass = prompt('🔒 ACCIÓN CRÍTICA:\nIntroduce tu contraseña de administrador para borrar la base de datos:');
         if (!pass) return;
 
         const savedPass = await this.getAdminPassword();
         if (pass !== savedPass) {
-          alert('❌ Contraseña incorrecta. Operación cancelada por seguridad.');
+          alert('❌ Contraseña incorrecta.');
           return;
         }
 
-        const doubleCheck = confirm('⚠️ ESTÁS A PUNTO DE BORRAR TODO.\n¿Estás completamente seguro de vaciar toda la base de datos?');
-        if (!doubleCheck) return;
-
-        try {
-          // Eliminar toda la base de datos (raíz)
-          await remove(ref(db));
-          alert('🧹 ¡Base de datos borrada por completo con éxito!');
-          window.location.reload();
-        } catch (error) {
-          alert('Error al intentar vaciar la base de datos.');
+        if (confirm('⚠️ ¿Seguro de borrar toda la información de la base de datos?')) {
+          try {
+            await remove(ref(db));
+            alert('🧹 Base de datos borrada con éxito.');
+            window.location.reload();
+          } catch (error) {
+            alert('Error al borrar la base de datos.');
+          }
         }
       },
 
@@ -296,73 +358,17 @@
         if (dateStr) return dateStr;
         if (!timestamp) return 'S/F';
         const d = new Date(timestamp);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        const hours = String(d.getHours()).padStart(2, '0');
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year}, ${hours}:${minutes} hs`;
-      },
-
-      async enableNotificationsManual() {
-        try {
-          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
-          this.playLoudAlarmSound();
-        } catch (e) {}
-
-        if ('Notification' in window) {
-          const perm = await Notification.requestPermission();
-          if (perm === 'granted') alert('🚨 ¡Alarma sonora activada!');
-        }
-        this.updateNotificationButtonState();
-      },
-
-      updateNotificationButtonState() {
-        const btn = document.getElementById('btn-notifications');
-        if (!btn) return;
-        if ('Notification' in window && Notification.permission === 'granted') {
-          btn.innerHTML = '<span>🚨 Alarma Activa</span>';
-          btn.className = 'text-xs bg-emerald-50 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200';
-        }
-      },
-
-      playLoudAlarmSound() {
-        try {
-          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
-
-          const now = this.audioCtx.currentTime;
-          const osc = this.audioCtx.createOscillator();
-          const gain = this.audioCtx.createGain();
-
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(880, now);
-          osc.frequency.setValueAtTime(1200, now + 0.15);
-          osc.frequency.setValueAtTime(880, now + 0.30);
-          osc.frequency.setValueAtTime(1200, now + 0.45);
-          osc.frequency.setValueAtTime(880, now + 0.60);
-          osc.frequency.setValueAtTime(1400, now + 0.75);
-
-          gain.gain.setValueAtTime(0.8, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 1.1);
-
-          osc.connect(gain);
-          gain.connect(this.audioCtx.destination);
-
-          osc.start(now);
-          osc.stop(now + 1.1);
-        } catch (e) {}
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} hs`;
       },
 
       triggerNotification(request) {
-        this.playLoudAlarmSound();
-        const formattedTime = this.formatDate(request.createdAt, request.requestTime);
+        // Enviar notificación instantánea a Telegram
+        this.sendTelegramNotification(request);
 
         if ('Notification' in window && Notification.permission === 'granted') {
           const title = `🚨 ¡NUEVO PEDIDO DE LINK! (${request.id})`;
           const options = {
-            body: `🕒 Hora: ${formattedTime}\n👤 Cliente: ${request.name}\n💰 Monto: $${request.amount || '0'}\n📌 Tipo: ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}`,
+            body: `💰 Monto: $${request.amount || '0'}\n📌 Tipo: ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}`,
             icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
             requireInteraction: true
           };
@@ -380,7 +386,7 @@
 
         try {
           await push(ref(db, 'treasurers'), { name, cuil, alias, cbu, createdAt: Date.now() });
-          alert('¡Cuenta de Tesorería guardada y publicada en la app!');
+          alert('¡Cuenta de Tesorería guardada!');
           document.getElementById('tres-name').value = '';
           document.getElementById('tres-cuil').value = '';
           document.getElementById('tres-alias').value = '';
@@ -391,7 +397,7 @@
       },
 
       async deleteTreasurer(key) {
-        if (confirm('¿Estás seguro de eliminar esta cuenta de resguardo?')) {
+        if (confirm('¿Eliminar esta cuenta de resguardo?')) {
           try {
             await remove(ref(db, `treasurers/${key}`));
           } catch (error) {
@@ -422,9 +428,7 @@
               <div class="text-[11px] text-slate-600">CUIL: ${t.cuil}</div>
               <div class="text-[11px] text-slate-800"><strong>Alias:</strong> ${t.alias}</div>
               <div class="text-[11px] text-slate-800 font-mono"><strong>CBU:</strong> ${t.cbu}</div>
-              <button onclick="adminApp.deleteTreasurer('${key}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 text-xs transition" title="Eliminar cuenta">
-                🗑️
-              </button>
+              <button onclick="adminApp.deleteTreasurer('${key}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 text-xs transition">🗑️</button>
             `;
             container.appendChild(card);
           });
