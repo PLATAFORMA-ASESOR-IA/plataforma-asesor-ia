@@ -45,6 +45,16 @@ class App {
     inputElement.value = this.formatNumberToAR(inputElement.value);
   }
 
+  formatTimestamp(dateObj) {
+    const d = dateObj || new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year}, ${hours}:${minutes} hs`;
+  }
+
   goToScreen(screenNumber) {
     if (screenNumber === 2) this.state.currentView = 'screen-2';
     if (screenNumber === 3) this.state.currentView = 'screen-3';
@@ -52,7 +62,6 @@ class App {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // --- ESCUCHA EN TIEMPO REAL DE CUENTAS DE TESORERÍA ---
   listenToTreasurers() {
     const treasurersRef = ref(db, 'treasurers');
     onValue(treasurersRef, (snapshot) => {
@@ -94,7 +103,6 @@ class App {
         </div>
 
         <div class="space-y-1.5 pt-1">
-          <!-- Campo Alias -->
           <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs">
             <div class="truncate mr-2">
               <span class="text-[10px] text-slate-400 block font-bold uppercase">Alias</span>
@@ -106,7 +114,6 @@ class App {
             </button>
           </div>
 
-          <!-- Campo CBU -->
           <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs">
             <div class="truncate mr-2">
               <span class="text-[10px] text-slate-400 block font-bold uppercase">CBU / CVU</span>
@@ -159,7 +166,6 @@ class App {
     this.updateView();
   }
 
-  // --- NAVEGACIÓN "VOLVER" ---
   goBack() {
     const view = this.state.currentView;
 
@@ -314,7 +320,6 @@ class App {
     window.location.reload();
   }
 
-  // --- REDIRECCIÓN AUTOMÁTICA EN TIEMPO REAL ---
   listenToOrderStatus(orderId) {
     const requestsRef = ref(db, 'requests');
     onValue(requestsRef, (snapshot) => {
@@ -343,6 +348,7 @@ class App {
 
     const orderId = '#NX-' + Math.floor(1000 + Math.random() * 9000);
     this.state.currentOrderId = orderId;
+    const nowFormatted = this.formatTimestamp(new Date());
 
     const newRequest = {
       id: orderId,
@@ -356,7 +362,8 @@ class App {
       selectedBanks: [],
       paymentUrl: '',
       status: 'Pendiente de Link',
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      requestTime: nowFormatted
     };
 
     try {
@@ -403,6 +410,7 @@ class App {
   async generateReimbursementOrder() {
     const orderId = '#TR-' + Math.floor(1000 + Math.random() * 9000);
     this.state.currentOrderId = orderId;
+    const nowFormatted = this.formatTimestamp(new Date());
 
     const newClaim = {
       id: orderId,
@@ -416,7 +424,8 @@ class App {
       selectedBanks: this.state.selectedBanks,
       paymentUrl: '',
       status: 'Pendiente de Link',
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      requestTime: nowFormatted
     };
 
     try {
