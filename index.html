@@ -70,43 +70,13 @@
             Gestiona tus consultas, pagos y solicitudes de manera rápida, segura y 100% digital con la garantía de <strong class="text-nxOrange-600">Naranja X</strong>.
           </p>
         </div>
-        <button onclick="app.goToScreen(2)" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+        <button onclick="app.goToCategorySelection()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
           Continuar
         </button>
       </div>
 
-      <!-- ================= PANTALLA 2: DATOS DEL CLIENTE ================= -->
-      <div id="screen-2" class="space-y-5 hidden">
-        <div>
-          <h2 class="text-xl font-extrabold text-nxPurple-900">Tus Datos Personales</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Completa la información requerida para iniciar tu gestión.</p>
-        </div>
-
-        <form id="client-form" onsubmit="app.handleClientSubmit(event)" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre Completo</label>
-            <input type="text" id="client-name" required placeholder="Ej. Juan Pérez" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">DNI</label>
-            <input type="text" id="client-dni" required placeholder="Ej. 35123456" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Teléfono / WhatsApp</label>
-            <input type="tel" id="client-phone" required placeholder="Ej. +54 9 11 1234 5678" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
-            <input type="email" id="client-email" required placeholder="correo@ejemplo.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
-          </div>
-          <button type="submit" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200 mt-2">
-            Siguiente Paso
-          </button>
-        </form>
-      </div>
-
-      <!-- ================= PANTALLA 3: SELECCIÓN DE CATEGORÍA ================= -->
-      <div id="screen-3" class="space-y-4 hidden">
+      <!-- ================= PANTALLA 2: SELECCIÓN DE CATEGORÍA ================= -->
+      <div id="screen-categories" class="space-y-4 hidden">
         <div>
           <h2 class="text-xl font-extrabold text-nxPurple-900">¿Qué gestión necesitas?</h2>
           <p class="text-xs text-slate-500 mt-0.5">Selecciona una de las siguientes opciones.</p>
@@ -145,9 +115,111 @@
         </div>
       </div>
 
+      <!-- ================= FLUJO B: PAGOS / RESUMEN (REESTRUCTURADO) ================= -->
+      <!-- Paso 1: Ingreso de Importe (Envía pedido inmediatamente a Admin) -->
+      <div id="flow-pay-amount" class="space-y-4 hidden">
+        <div>
+          <span class="text-xs font-bold text-nxPurple-800 uppercase tracking-wider">Pasarela Naranja X</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Pago de Resumen</h2>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Abonar ($)</label>
+          <input type="text" id="pay-amount" placeholder="Ej. 350.000" oninput="app.formatCurrencyInput(this)" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm font-semibold">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Pago</label>
+          <select id="pay-type" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+            <option value="Pago Total">Pago Total</option>
+            <option value="Pago Parcial">Pago Parcial</option>
+          </select>
+        </div>
+
+        <button type="button" onclick="app.submitAmountAndGoToUserData()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+          Siguiente Paso
+        </button>
+      </div>
+
+      <!-- Paso 2: Ingreso de Datos Personales del Cliente -->
+      <div id="flow-pay-user-data" class="space-y-5 hidden">
+        <div>
+          <h2 class="text-xl font-extrabold text-nxPurple-900">Tus Datos Personales</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Completa la información para asociar tu comprobante.</p>
+        </div>
+
+        <form id="pay-client-form" onsubmit="app.handlePayUserSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre Completo</label>
+            <input type="text" id="pay-client-name" required placeholder="Ej. Juan Pérez" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">DNI</label>
+            <input type="text" id="pay-client-dni" required placeholder="Ej. 35123456" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Teléfono / WhatsApp</label>
+            <input type="tel" id="pay-client-phone" required placeholder="Ej. +54 9 11 1234 5678" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
+            <input type="email" id="pay-client-email" required placeholder="correo@ejemplo.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <button type="submit" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200 mt-2">
+            Ver Confirmación
+          </button>
+        </form>
+      </div>
+
+      <!-- Paso 3: Confirmación de Resumen de Pago -->
+      <div id="flow-pay-summary" class="space-y-5 hidden">
+        <div>
+          <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Confirmación de Pago</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Resumen de la Operación</h2>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs text-slate-700">
+          <div class="flex justify-between border-b border-slate-200 pb-2">
+            <span class="font-bold text-slate-500">Cliente:</span>
+            <span id="sum-client-name" class="font-extrabold text-slate-900">-</span>
+          </div>
+          <div class="flex justify-between border-b border-slate-200 pb-2">
+            <span class="font-bold text-slate-500">DNI:</span>
+            <span id="sum-client-dni" class="font-extrabold text-slate-900">-</span>
+          </div>
+          <div class="flex justify-between border-b border-slate-200 pb-2">
+            <span class="font-bold text-slate-500">Modalidad:</span>
+            <span id="sum-pay-type" class="font-extrabold text-nxPurple-900">-</span>
+          </div>
+          <div class="flex justify-between items-center pt-1">
+            <span class="font-extrabold text-slate-800 text-sm">Total a Pagar Resumen:</span>
+            <span id="sum-pay-amount" class="font-black text-lg text-nxOrange-600">$0</span>
+          </div>
+        </div>
+
+        <button type="button" onclick="app.confirmAndGoToWaiting()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+          Generar Link de Pago
+        </button>
+      </div>
+
+      <!-- Paso 4: Pantalla de Espera (Escucha Redirección Automática) -->
+      <div id="pay-waiting-view" class="space-y-6 hidden text-center py-4">
+        <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
+          <p class="text-xs text-nxPurple-800 font-semibold">Número de Pedido Asignado</p>
+          <h3 id="display-order-id" class="text-xl font-extrabold text-nxPurple-900 tracking-wide">#NX-0000</h3>
+          <p id="display-order-amount" class="text-sm font-bold text-nxOrange-600 pt-1">$0</p>
+        </div>
+
+        <div class="space-y-4 py-2">
+          <div class="w-16 h-16 border-4 border-nxOrange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <h3 class="text-lg font-extrabold text-nxPurple-900 leading-snug">
+            Buscando Link de Pago<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
+          </h3>
+          <p class="text-xs text-slate-500">Un tesorero está homologando tu solicitud en tiempo real.</p>
+        </div>
+      </div>
+
       <!-- ================= FLUJO A: PROBLEMAS CON LA APP ================= -->
-      
-      <!-- Subpantalla A1: Información y Justificativo de Resguardo -->
       <div id="flow-app-info" class="space-y-5 hidden">
         <div>
           <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Soporte Técnico Naranja X</span>
@@ -169,7 +241,6 @@
         </button>
       </div>
 
-      <!-- Subpantalla A2: Cards de Cuentas de Tesorería Oficiales -->
       <div id="flow-app-treasury" class="space-y-5 hidden">
         <div>
           <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Cuentas Oficiales Naranja X</span>
@@ -177,17 +248,13 @@
           <p class="text-xs text-slate-500 mt-0.5">Selecciona y copia los datos de la cuenta asignada por tu asesor.</p>
         </div>
 
-        <!-- Contenedor dinámico de Cards de Tesorería -->
-        <div id="treasury-cards-container" class="space-y-3.5 max-h-72 overflow-y-auto pr-1">
-          <!-- Inyectado desde Firebase -->
-        </div>
+        <div id="treasury-cards-container" class="space-y-3.5 max-h-72 overflow-y-auto pr-1"></div>
 
         <button type="button" onclick="app.goToOperatorInstructions()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
           Siguiente
         </button>
       </div>
 
-      <!-- Subpantalla A3: Instrucciones del Operador Telefónico y Finalización -->
       <div id="flow-app-operator" class="space-y-5 hidden">
         <div>
           <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Paso Final</span>
@@ -209,49 +276,6 @@
         <button type="button" onclick="app.resetApp()" class="w-full bg-nxPurple-900 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-nxPurple-800 transition text-sm shadow-md">
           Entendido / Finalizar Consulta
         </button>
-      </div>
-
-      <!-- ================= FLUJO B: PAGOS / RESUMEN ================= -->
-      <div id="flow-payments" class="space-y-5 hidden">
-        <div>
-          <span class="text-xs font-bold text-nxPurple-800 uppercase tracking-wider">Pasarela Naranja X</span>
-          <h2 id="payment-title-heading" class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Pago de Resumen</h2>
-        </div>
-
-        <div id="pay-form-view" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Abonar ($)</label>
-            <input type="text" id="pay-amount" placeholder="Ej. 350.000" oninput="app.formatCurrencyInput(this)" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm font-semibold">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Pago</label>
-            <select id="pay-type" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
-              <option value="Pago Total">Pago Total</option>
-              <option value="Pago Parcial">Pago Parcial</option>
-            </select>
-          </div>
-
-          <button type="button" onclick="app.generatePaymentOrder()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
-            Generar Solicitud de Pago
-          </button>
-        </div>
-
-        <div id="pay-waiting-view" class="space-y-6 hidden text-center py-4">
-          <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
-            <p class="text-xs text-nxPurple-800 font-semibold">Número de Pedido Asignado</p>
-            <h3 id="display-order-id" class="text-xl font-extrabold text-nxPurple-900 tracking-wide">#NX-0000</h3>
-            <p id="display-order-amount" class="text-sm font-bold text-nxOrange-600 pt-1">$0</p>
-          </div>
-
-          <div class="space-y-4 py-2">
-            <div class="w-16 h-16 border-4 border-nxOrange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <h3 class="text-lg font-extrabold text-nxPurple-900 leading-snug">
-              Buscando Link de Pago<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
-            </h3>
-            <p class="text-xs text-slate-500">Un tesorero está homologando tu solicitud en tiempo real.</p>
-          </div>
-        </div>
       </div>
 
       <!-- ================= FLUJO C: TRANSFERENCIAS / DEVOLUCIONES ================= -->
