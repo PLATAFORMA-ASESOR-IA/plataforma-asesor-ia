@@ -98,7 +98,43 @@
       </div>
     </div>
 
-    <!-- SECCIÓN 2: Pedidos de Links -->
+    <!-- SECCIÓN 2: Seguridad, Cambio de Contraseña y Borrado Total -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Cambiar Contraseña -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
+        <h2 class="font-extrabold text-nxPurple-900 text-base">🔐 Cambiar Contraseña de Administrador</h2>
+        <p class="text-xs text-slate-500">Actualiza tu clave de acceso. La nueva contraseña quedará guardada de forma segura en la nube.</p>
+        
+        <form onsubmit="adminApp.changePassword(event)" class="space-y-3 pt-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Contraseña Actual</label>
+            <input type="password" id="current-pass" required placeholder="••••••••" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Nueva Contraseña</label>
+            <input type="password" id="new-pass" required placeholder="••••••••" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          </div>
+          <button type="submit" class="w-full bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold py-2.5 rounded-lg text-xs transition shadow-sm">
+            Actualizar Contraseña
+          </button>
+        </form>
+      </div>
+
+      <!-- Zona de Peligro: Borrar Todos los Datos -->
+      <div class="bg-white rounded-2xl shadow-sm border border-red-200 p-5 space-y-3 flex flex-col justify-between">
+        <div>
+          <h2 class="font-extrabold text-red-600 text-base">⚠️ Zona de Peligro - Borrado Total</h2>
+          <p class="text-xs text-slate-500 mt-1">Esta acción eliminará <strong>absolutamente toda la información</strong> de la base de datos (pedidos, clientes, cuentas de tesorería). No se puede deshacer.</p>
+        </div>
+        <div class="pt-4">
+          <button onclick="adminApp.confirmWipeDatabase()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center space-x-2">
+            <span>🗑️ Borrar Todos los Datos del Sistema</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: Pedidos de Links -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -146,10 +182,10 @@
     &copy; 2026 Módulo de Tesorería Interna - Naranja X
   </footer>
 
-  <!-- Script Admin con Formateo de Fecha y Hora -->
+  <!-- Script Admin con Seguridad Avanzada -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, onValue, update, push, remove, get, child, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDHcfixcpUU4O-RYLmfNzTUDZFB13jEt5s",
@@ -178,9 +214,20 @@
         }
       },
 
-      login() {
+      async getAdminPassword() {
+        try {
+          const snapshot = await get(child(ref(db), 'settings/adminPassword'));
+          return snapshot.exists() ? snapshot.val() : 'admin123';
+        } catch (e) {
+          return 'admin123';
+        }
+      },
+
+      async login() {
         const pass = document.getElementById('admin-pass').value;
-        if (pass === 'admin123') {
+        const currentAdminPass = await this.getAdminPassword();
+
+        if (pass === currentAdminPass) {
           sessionStorage.setItem('nx_admin_auth', 'true');
           document.getElementById('login-overlay').classList.add('hidden');
           this.listenToFirebaseRequests();
@@ -188,6 +235,55 @@
           this.enableNotificationsManual();
         } else {
           alert('Clave incorrecta');
+        }
+      },
+
+      async changePassword(e) {
+        e.preventDefault();
+        const currentInput = document.getElementById('current-pass').value;
+        const newInput = document.getElementById('new-pass').value;
+        const savedPass = await this.getAdminPassword();
+
+        if (currentInput !== savedPass) {
+          alert('⚠️ La contraseña actual es incorrecta.');
+          return;
+        }
+
+        if (!newInput || newInput.length < 4) {
+          alert('⚠️ La nueva contraseña debe tener al menos 4 caracteres.');
+          return;
+        }
+
+        try {
+          await set(ref(db, 'settings/adminPassword'), newInput);
+          alert('🎉 ¡Contraseña actualizada con éxito! Quedó guardada de forma segura.');
+          document.getElementById('current-pass').value = '';
+          document.getElementById('new-pass').value = '';
+        } catch (error) {
+          alert('Error al actualizar la contraseña.');
+        }
+      },
+
+      async confirmWipeDatabase() {
+        const pass = prompt('🔒 ACCIÓN CRÍTICA:\nPara borrar TODOS los datos de la base de datos (pedidos, clientes y tesoreros), introduce tu contraseña de administrador:');
+        if (!pass) return;
+
+        const savedPass = await this.getAdminPassword();
+        if (pass !== savedPass) {
+          alert('❌ Contraseña incorrecta. Operación cancelada por seguridad.');
+          return;
+        }
+
+        const doubleCheck = confirm('⚠️ ESTÁS A PUNTO DE BORRAR TODO.\n¿Estás completamente seguro de vaciar toda la base de datos?');
+        if (!doubleCheck) return;
+
+        try {
+          // Eliminar toda la base de datos (raíz)
+          await remove(ref(db));
+          alert('🧹 ¡Base de datos borrada por completo con éxito!');
+          window.location.reload();
+        } catch (error) {
+          alert('Error al intentar vaciar la base de datos.');
         }
       },
 
