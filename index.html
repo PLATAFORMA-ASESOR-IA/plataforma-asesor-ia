@@ -38,12 +38,13 @@
   <!-- Contenedor Principal -->
   <main class="max-w-md w-full mx-auto p-4 flex-1 flex flex-col justify-center">
     
-    <!-- Barra de Progreso y Botón de Volver Global -->
-    <div id="nav-header-container" class="mb-4 hidden flex items-center justify-between">
-      <button onclick="app.goBack()" class="text-xs font-bold text-nxPurple-800 hover:text-nxPurple-900 flex items-center space-x-1 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition">
-        <i class="fa-solid fa-arrow-left"></i>
+    <!-- BARRA NAVEGADORA SUPERIOR CON BOTÓN VOLVER (Corregida) -->
+    <div id="nav-header-container" class="mb-4 hidden items-center justify-between">
+      <button type="button" onclick="app.goBack()" class="text-xs font-bold text-nxPurple-900 hover:text-nxOrange-600 flex items-center space-x-1.5 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm transition active:scale-95">
+        <i class="fa-solid fa-arrow-left text-nxOrange-500"></i>
         <span>Volver</span>
       </button>
+
       <div id="progress-container" class="flex-1 ml-3">
         <div class="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
           <span id="step-label" class="text-nxPurple-900 font-bold">Paso 1 de 3</span>
@@ -112,7 +113,6 @@
         </div>
 
         <div class="space-y-3 pt-1">
-          <!-- Card 1 -->
           <button onclick="app.selectCategory('app_issues')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-mobile-screen-button text-xl text-nxPurple-800"></i>
@@ -123,7 +123,6 @@
             </div>
           </button>
 
-          <!-- Card 2 -->
           <button onclick="app.selectCategory('payments')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-file-invoice-dollar text-xl text-nxPurple-800"></i>
@@ -134,7 +133,6 @@
             </div>
           </button>
 
-          <!-- Card 3 -->
           <button onclick="app.selectCategory('transfers')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-money-bill-transfer text-xl text-nxPurple-800"></i>
