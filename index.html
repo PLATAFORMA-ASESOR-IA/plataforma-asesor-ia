@@ -14,21 +14,8 @@
       theme: {
         extend: {
           colors: {
-            nxOrange: {
-              50: '#fff7ed',
-              100: '#ffedd5',
-              500: '#FF6B00',
-              600: '#ea580c',
-              700: '#c2410c'
-            },
-            nxPurple: {
-              50: '#f3e8ff',
-              100: '#e9d5ff',
-              600: '#9333ea',
-              700: '#7e22ce',
-              800: '#6b21a8',
-              900: '#581c87'
-            }
+            nxOrange: { 50: '#fff7ed', 100: '#ffedd5', 500: '#FF6B00', 600: '#ea580c', 700: '#c2410c' },
+            nxPurple: { 50: '#f3e8ff', 100: '#e9d5ff', 600: '#9333ea', 700: '#7e22ce', 800: '#6b21a8', 900: '#581c87' }
           }
         }
       }
@@ -37,7 +24,7 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-slate-50">
 
-  <!-- Header / Barra Superior (Acceso discreto a Admin) -->
+  <!-- Header / Barra Superior -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-2.5">
@@ -51,14 +38,20 @@
   <!-- Contenedor Principal -->
   <main class="max-w-md w-full mx-auto p-4 flex-1 flex flex-col justify-center">
     
-    <!-- Barra de Progreso -->
-    <div id="progress-container" class="mb-5 hidden">
-      <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1.5">
-        <span id="step-label" class="text-nxPurple-900 font-bold">Paso 1 de 3</span>
-        <span id="step-percent" class="text-nxOrange-600 font-bold">33%</span>
-      </div>
-      <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-        <div id="progress-bar" class="bg-nxOrange-500 h-full w-1/3 transition-all duration-300 rounded-full"></div>
+    <!-- Barra de Progreso y Botón de Volver Global -->
+    <div id="nav-header-container" class="mb-4 hidden flex items-center justify-between">
+      <button onclick="app.goBack()" class="text-xs font-bold text-nxPurple-800 hover:text-nxPurple-900 flex items-center space-x-1 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Volver</span>
+      </button>
+      <div id="progress-container" class="flex-1 ml-3">
+        <div class="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
+          <span id="step-label" class="text-nxPurple-900 font-bold">Paso 1 de 3</span>
+          <span id="step-percent" class="text-nxOrange-600 font-bold">33%</span>
+        </div>
+        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+          <div id="progress-bar" class="bg-nxOrange-500 h-full w-1/3 transition-all duration-300 rounded-full"></div>
+        </div>
       </div>
     </div>
 
@@ -119,7 +112,7 @@
         </div>
 
         <div class="space-y-3 pt-1">
-          <!-- Card 1: Problemas con la aplicación -->
+          <!-- Card 1 -->
           <button onclick="app.selectCategory('app_issues')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-mobile-screen-button text-xl text-nxPurple-800"></i>
@@ -130,7 +123,7 @@
             </div>
           </button>
 
-          <!-- Card 2: Pagos/Resumen -->
+          <!-- Card 2 -->
           <button onclick="app.selectCategory('payments')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-file-invoice-dollar text-xl text-nxPurple-800"></i>
@@ -141,7 +134,7 @@
             </div>
           </button>
 
-          <!-- Card 3: Transferencias/Compras -->
+          <!-- Card 3 -->
           <button onclick="app.selectCategory('transfers')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-money-bill-transfer text-xl text-nxPurple-800"></i>
@@ -195,7 +188,7 @@
           <h2 id="payment-title-heading" class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Pago de Resumen</h2>
         </div>
 
-        <!-- Submódulo B1: Ingreso de Monto -->
+        <!-- B1: Ingreso de Monto -->
         <div id="pay-form-view" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Abonar ($)</label>
@@ -215,7 +208,7 @@
           </button>
         </div>
 
-        <!-- Submódulo B2: Esperando Link de Pago -->
+        <!-- B2: Esperando Link (Redirección Automática) -->
         <div id="pay-waiting-view" class="space-y-6 hidden text-center py-4">
           <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
             <p class="text-xs text-nxPurple-800 font-semibold">Número de Pedido Asignado</p>
@@ -226,14 +219,10 @@
           <div class="space-y-4 py-2">
             <div class="w-16 h-16 border-4 border-nxOrange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <h3 class="text-lg font-extrabold text-nxPurple-900 leading-snug">
-              Espere un momento<br><span class="text-nxOrange-600">Generando Link de Pago...</span>
+              Buscando Link de Pago<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
             </h3>
-            <p class="text-xs text-slate-500">Un tesorero está validando tu solicitud en tiempo real.</p>
+            <p class="text-xs text-slate-500">Un tesorero está homologando tu solicitud en tiempo real.</p>
           </div>
-
-          <button type="button" onclick="app.checkPaymentStatus()" class="w-full bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold py-3.5 px-4 rounded-xl transition text-sm shadow-md">
-            Verificar Estado / Continuar al Pago
-          </button>
         </div>
       </div>
 
@@ -263,75 +252,67 @@
           <div class="p-3.5 bg-nxPurple-50 border border-nxPurple-100 rounded-xl">
             <h4 class="font-bold text-nxPurple-900 text-xs uppercase tracking-wider mb-1">¿Por qué solicitamos esta información?</h4>
             <p class="text-xs text-slate-600 leading-relaxed">
-              Para homologar y liberar tu reintegro, el sistema de auditoría debe verificar qué entidades bancarias y billeteras virtuales tienes habilitadas a tu nombre, garantizando así la canalización segura del saldo.
+              Para homologar y liberar tu reintegro, el sistema de auditoría debe verificar qué entidades bancarias y billeteras virtuales tienes habilitadas a tu nombre.
             </p>
           </div>
 
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Selecciona todas las cuentas donde posees titularidad:</label>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Selecciona tus cuentas de titularidad:</label>
           
-          <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+          <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700 max-h-48 overflow-y-auto p-1">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="Naranja X" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
               <span>🧡 Naranja X</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="Mercado Pago" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
               <span>💙 Mercado Pago</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="Banco Nación" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
               <span>🏛️ Banco Nación</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="Banco Galicia" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
               <span>🟠 Banco Galicia</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="BBVA" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
-              <span>🔵 BBVA Argentina</span>
+              <span>🔵 BBVA</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-start space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="Santander" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
               <span>🔴 Santander</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="Ualá" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
               <span>🦄 Ualá</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
+            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 transition">
               <input type="checkbox" value="Brubank" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
               <span>💜 Brubank</span>
             </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
-              <input type="checkbox" value="Banco Provincia" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
-              <span>💚 Banco Provincia</span>
-            </label>
-            <label class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2 cursor-pointer hover:bg-nxOrange-50 hover:border-nxOrange-300 transition">
-              <input type="checkbox" value="Otros Bancos / PSP" class="bank-checkbox w-4 h-4 text-nxOrange-500 rounded focus:ring-0">
-              <span>🏦 Otros Bancos</span>
-            </label>
           </div>
 
-          <button type="button" onclick="app.goToReimbursementInstructions()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
-            Confirmar Cuentas y Continuar
+          <button type="button" onclick="app.goToReimbursementInstructions()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+            Confirmar y Continuar
           </button>
         </div>
 
-        <!-- C3: Instrucciones del Operador y Generación de Link -->
+        <!-- C3: Instrucciones del Operador -->
         <div id="claim-instructions-view" class="space-y-5 hidden">
           <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
             <h4 class="font-bold text-slate-900 text-sm">Paso Final: Acreditación Guiada</h4>
             <p class="text-xs text-slate-600 leading-relaxed">
-              Sigue minuciosamente las indicaciones que te brindará el operador para actualizar el estado del reclamo y concretar el <strong>Reintegro del Monto</strong> sobre tu cuenta.
+              Sigue minuciosamente las indicaciones de tu asesor telefónico para habilitar el canal de reintegro en tu cuenta.
             </p>
           </div>
 
-          <button type="button" onclick="app.generateReimbursementOrder()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
-            Generar Link de Reintegro / Acreditación
+          <button type="button" onclick="app.generateReimbursementOrder()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+            Generar Solicitud de Reintegro
           </button>
         </div>
 
-        <!-- C4: Esperando Link de Reintegro del Tesorero -->
+        <!-- C4: Esperando Link de Reintegro (Redirección Automática) -->
         <div id="claim-waiting-view" class="space-y-6 hidden text-center py-4">
           <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
             <p class="text-xs text-nxPurple-800 font-semibold">Solicitud de Reintegro Asignada</p>
@@ -342,21 +323,17 @@
           <div class="space-y-4 py-2">
             <div class="w-16 h-16 border-4 border-nxOrange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <h3 class="text-lg font-extrabold text-nxPurple-900 leading-snug">
-              Espere un momento<br><span class="text-nxOrange-600">Generando Link de Reintegro...</span>
+              Buscando Link de Reintegro<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
             </h3>
-            <p class="text-xs text-slate-500">Un tesorero está habilitando la vía de acreditación directa.</p>
+            <p class="text-xs text-slate-500">Un tesorero está validando la vía de acreditación.</p>
           </div>
-
-          <button type="button" onclick="app.checkReimbursementStatus()" class="w-full bg-nxPurple-900 hover:bg-nxPurple-800 text-white font-bold py-3.5 px-4 rounded-xl transition text-sm shadow-md">
-            Verificar Estado / Continuar al Reintegro
-          </button>
         </div>
       </div>
 
     </div>
   </main>
 
-  <!-- Modal de Autenticación Admin Oculto -->
+  <!-- Modal Admin -->
   <div id="admin-auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl p-6 max-w-xs w-full shadow-2xl border border-slate-100 space-y-4">
       <div class="text-center">
@@ -372,12 +349,10 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <footer class="py-4 text-center text-xs text-slate-400">
     &copy; 2026 Naranja X - Todos los derechos reservados.
   </footer>
 
-  <!-- Script Principal Módulo de JavaScript -->
   <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>
