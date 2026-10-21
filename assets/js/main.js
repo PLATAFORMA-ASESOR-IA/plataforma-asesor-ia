@@ -1,8 +1,6 @@
-// Importar Firebase SDK desde CDN oficial
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// Credenciales de Firebase de tu proyecto
 const firebaseConfig = {
   apiKey: "AIzaSyDHcfixcpUU4O-RYLmfNzTUDZFB13jEt5s",
   authDomain: "portal-naranja-763f4.firebaseapp.com",
@@ -13,14 +11,13 @@ const firebaseConfig = {
   appId: "1:908694133500:web:1808b481eeb45c305c9579"
 };
 
-// Inicializar Firebase
 const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 
 class App {
   constructor() {
     this.state = {
-      currentScreen: 1,
+      currentView: 'screen-1', // screen-1, screen-2, screen-3, flow-app-issues, flow-payments, pay-waiting, flow-transfers, claim-banks, claim-instructions, claim-waiting
       client: { name: '', dni: '', phone: '', email: '' },
       currentCategory: null,
       currentOrderId: null,
@@ -31,7 +28,7 @@ class App {
   }
 
   init() {
-    this.updateScreen();
+    this.updateView();
   }
 
   formatNumberToAR(numStr) {
@@ -45,38 +42,109 @@ class App {
   }
 
   goToScreen(screenNumber) {
-    this.state.currentScreen = screenNumber;
-    this.updateScreen();
+    if (screenNumber === 2) this.state.currentView = 'screen-2';
+    if (screenNumber === 3) this.state.currentView = 'screen-3';
+    this.updateView();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  updateScreen() {
-    const screens = ['screen-1', 'screen-2', 'screen-3', 'flow-app-issues', 'flow-payments', 'flow-transfers'];
-    screens.forEach(id => {
+  // --- NAVEGACIÓN "VOLVER" INTELIGENTE CON PERSISTENCIA ---
+  goBack() {
+    const view = this.state.currentView;
+
+    if (view === 'screen-2') {
+      this.state.currentView = 'screen-1';
+    } else if (view === 'screen-3') {
+      this.state.currentView = 'screen-2';
+    } else if (view === 'flow-app-issues' || view === 'flow-payments' || view === 'flow-transfers') {
+      this.state.currentView = 'screen-3';
+    } else if (view === 'pay-waiting') {
+      this.state.currentView = 'flow-payments';
+    } else if (view === 'claim-banks') {
+      this.state.currentView = 'flow-transfers';
+    } else if (view === 'claim-instructions') {
+      this.state.currentView = 'claim-banks';
+    } else if (view === 'claim-waiting') {
+      this.state.currentView = 'claim-instructions';
+    }
+
+    this.updateView();
+  }
+
+  updateView() {
+    const views = [
+      'screen-1', 'screen-2', 'screen-3', 
+      'flow-app-issues', 'flow-payments', 'pay-form-view', 'pay-waiting-view', 
+      'flow-transfers', 'claim-form-view', 'claim-banks-view', 'claim-instructions-view', 'claim-waiting-view'
+    ];
+
+    views.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.add('hidden');
     });
 
-    const progressContainer = document.getElementById('progress-container');
+    const navHeader = document.getElementById('nav-header-container');
+    const v = this.state.currentView;
 
-    if (this.state.currentScreen === 1) {
+    if (v === 'screen-1') {
       document.getElementById('screen-1').classList.remove('hidden');
-      progressContainer.classList.add('hidden');
-    } else if (this.state.currentScreen === 2) {
+      if (navHeader) navHeader.classList.add('hidden');
+    } else {
+      if (navHeader) navHeader.classList.remove('hidden');
+    }
+
+    if (v === 'screen-2') {
       document.getElementById('screen-2').classList.remove('hidden');
       this.updateProgress(1, 3, 'Paso 2 de 3: Datos Personales', '33%');
-    } else if (this.state.currentScreen === 3) {
+      // Restaurar datos guardados si existen
+      if (this.state.client.name) document.getElementById('client-name').value = this.state.client.name;
+      if (this.state.client.dni) document.getElementById('client-dni').value = this.state.client.dni;
+      if (this.state.client.phone) document.getElementById('client-phone').value = this.state.client.phone;
+      if (this.state.client.email) document.getElementById('client-email').value = this.state.client.email;
+    } else if (v === 'screen-3') {
       document.getElementById('screen-3').classList.remove('hidden');
-      this.updateProgress(2, 3, 'Paso 3 de 3: Selección de Categoría', '66%');
+      this.updateProgress(2, 3, 'Paso 3 de 3: Gestión', '66%');
+    } else if (v === 'flow-app-issues') {
+      document.getElementById('flow-app-issues').classList.remove('hidden');
+      this.hideProgress();
+    } else if (v === 'flow-payments') {
+      document.getElementById('flow-payments').classList.remove('hidden');
+      document.getElementById('pay-form-view').classList.remove('hidden');
+      this.hideProgress();
+    } else if (v === 'pay-waiting') {
+      document.getElementById('flow-payments').classList.remove('hidden');
+      document.getElementById('pay-waiting-view').classList.remove('hidden');
+      this.hideProgress();
+    } else if (v === 'flow-transfers') {
+      document.getElementById('flow-transfers').classList.remove('hidden');
+      document.getElementById('claim-form-view').classList.remove('hidden');
+      this.hideProgress();
+    } else if (v === 'claim-banks') {
+      document.getElementById('flow-transfers').classList.remove('hidden');
+      document.getElementById('claim-banks-view').classList.remove('hidden');
+      this.hideProgress();
+    } else if (v === 'claim-instructions') {
+      document.getElementById('flow-transfers').classList.remove('hidden');
+      document.getElementById('claim-instructions-view').classList.remove('hidden');
+      this.hideProgress();
+    } else if (v === 'claim-waiting') {
+      document.getElementById('flow-transfers').classList.remove('hidden');
+      document.getElementById('claim-waiting-view').classList.remove('hidden');
+      this.hideProgress();
     }
   }
 
   updateProgress(current, total, labelText, percentText) {
-    const progressContainer = document.getElementById('progress-container');
-    progressContainer.classList.remove('hidden');
+    const navHeader = document.getElementById('nav-header-container');
+    if (navHeader) navHeader.classList.remove('hidden');
     document.getElementById('step-label').innerText = labelText;
     document.getElementById('step-percent').innerText = percentText;
     document.getElementById('progress-bar').style.width = `${(current / total) * 100}%`;
+  }
+
+  hideProgress() {
+    const p = document.getElementById('progress-container');
+    if (p) p.classList.add('hidden');
   }
 
   handleClientSubmit(e) {
@@ -98,24 +166,32 @@ class App {
 
   selectCategory(category) {
     this.state.currentCategory = category;
-    document.getElementById('screen-3').classList.add('hidden');
-    document.getElementById('progress-container').classList.add('hidden');
-
     if (category === 'app_issues') {
-      document.getElementById('flow-app-issues').classList.remove('hidden');
+      this.state.currentView = 'flow-app-issues';
     } else if (category === 'payments') {
-      document.getElementById('flow-payments').classList.remove('hidden');
+      this.state.currentView = 'flow-payments';
     } else if (category === 'transfers') {
-      document.getElementById('flow-transfers').classList.remove('hidden');
-      document.getElementById('claim-form-view').classList.remove('hidden');
-      document.getElementById('claim-banks-view').classList.add('hidden');
-      document.getElementById('claim-instructions-view').classList.add('hidden');
-      document.getElementById('claim-waiting-view').classList.add('hidden');
+      this.state.currentView = 'flow-transfers';
     }
+    this.updateView();
   }
 
   resetApp() {
     window.location.reload();
+  }
+
+  // --- REDIRECCIÓN AUTOMÁTICA EN TIEMPO REAL (FIREBASE LISTENER) ---
+  listenToOrderStatus(orderId) {
+    const requestsRef = ref(db, 'requests');
+    onValue(requestsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      Object.values(data).forEach(req => {
+        if (req.id === orderId && req.paymentUrl && req.paymentUrl.trim() !== '') {
+          // ¡Enlace generado por el admin! Redirección automática inmediata
+          window.location.href = req.paymentUrl.trim();
+        }
+      });
+    });
   }
 
   // --- FLUJO B: PAGOS / RESUMEN ---
@@ -156,32 +232,11 @@ class App {
     document.getElementById('display-order-id').innerText = orderId;
     document.getElementById('display-order-amount').innerText = `$${formattedAmount}`;
 
-    document.getElementById('pay-form-view').classList.add('hidden');
-    document.getElementById('pay-waiting-view').classList.remove('hidden');
-  }
+    this.state.currentView = 'pay-waiting';
+    this.updateView();
 
-  async checkPaymentStatus() {
-    try {
-      const snapshot = await get(child(ref(db), 'requests'));
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        let foundUrl = '';
-        Object.values(data).forEach(req => {
-          if (req.id === this.state.currentOrderId && req.paymentUrl) {
-            foundUrl = req.paymentUrl;
-          }
-        });
-
-        if (foundUrl) {
-          alert('Ya se Generó tu Link de Pago');
-          window.location.href = foundUrl;
-        } else {
-          alert('Aún estamos procesando tu solicitud. Por favor, reintenta en un momento.');
-        }
-      }
-    } catch (e) {
-      alert('Verificando estado...');
-    }
+    // Activar el escucha en tiempo real para redirección automática
+    this.listenToOrderStatus(orderId);
   }
 
   // --- FLUJO C: TRANSFERENCIAS / REINTEGRO ---
@@ -192,8 +247,8 @@ class App {
       return;
     }
     this.state.claimAmount = this.formatNumberToAR(rawAmount);
-    document.getElementById('claim-form-view').classList.add('hidden');
-    document.getElementById('claim-banks-view').classList.remove('hidden');
+    this.state.currentView = 'claim-banks';
+    this.updateView();
   }
 
   goToReimbursementInstructions() {
@@ -206,8 +261,8 @@ class App {
     }
 
     this.state.selectedBanks = selected;
-    document.getElementById('claim-banks-view').classList.add('hidden');
-    document.getElementById('claim-instructions-view').classList.remove('hidden');
+    this.state.currentView = 'claim-instructions';
+    this.updateView();
   }
 
   async generateReimbursementOrder() {
@@ -238,32 +293,11 @@ class App {
     document.getElementById('display-claim-id').innerText = orderId;
     document.getElementById('display-claim-amount').innerText = `$${this.state.claimAmount}`;
 
-    document.getElementById('claim-instructions-view').classList.add('hidden');
-    document.getElementById('claim-waiting-view').classList.remove('hidden');
-  }
+    this.state.currentView = 'claim-waiting';
+    this.updateView();
 
-  async checkReimbursementStatus() {
-    try {
-      const snapshot = await get(child(ref(db), 'requests'));
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        let foundUrl = '';
-        Object.values(data).forEach(req => {
-          if (req.id === this.state.currentOrderId && req.paymentUrl) {
-            foundUrl = req.paymentUrl;
-          }
-        });
-
-        if (foundUrl) {
-          alert('Ya se Generó tu Link de Reintegro');
-          window.location.href = foundUrl;
-        } else {
-          alert('Aún estamos procesando tu solicitud de reintegro. Por favor, reintenta en un momento.');
-        }
-      }
-    } catch (e) {
-      alert('Verificando estado...');
-    }
+    // Activar el escucha en tiempo real para redirección automática
+    this.listenToOrderStatus(orderId);
   }
 
   openAdminModal() {
@@ -285,5 +319,4 @@ class App {
   }
 }
 
-// Exportación explícita al objeto global window para interacción con HTML onclick
 window.app = new App();
