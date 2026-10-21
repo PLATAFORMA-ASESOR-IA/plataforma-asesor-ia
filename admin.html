@@ -64,7 +64,7 @@
         
         <div class="flex items-center space-x-2">
           <button id="btn-notifications" onclick="adminApp.enableNotificationsManual()" class="text-xs bg-nxPurple-50 hover:bg-nxPurple-100 text-nxPurple-800 font-bold px-3.5 py-2 rounded-xl transition flex items-center space-x-1 border border-nxPurple-200">
-            <span>🔔 Activar Notificaciones</span>
+            <span>🚨 Activar Alarma Sonora</span>
           </button>
         </div>
       </div>
@@ -101,7 +101,7 @@
     &copy; 2026 Módulo de Tesorería Interna - Naranja X
   </footer>
 
-  <!-- Script Admin con Firebase Realtime Listeners -->
+  <!-- Script Admin con Alarma Sonora Estridente -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -151,14 +151,21 @@
 
       async enableNotificationsManual() {
         try {
-          this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          this.playAlertSound();
-        } catch (e) {}
+          if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (this.audioCtx.state === 'suspended') {
+            await this.audioCtx.resume();
+          }
+          this.playLoudAlarmSound();
+        } catch (e) {
+          console.error('Audio init error:', e);
+        }
 
         if ('Notification' in window) {
           const perm = await Notification.requestPermission();
           if (perm === 'granted') {
-            alert('🎉 ¡Notificaciones activadas con éxito!');
+            alert('🚨 ¡Alarma sonora y notificaciones activadas a máximo volumen!');
           }
         }
         this.updateNotificationButtonState();
@@ -168,40 +175,58 @@
         const btn = document.getElementById('btn-notifications');
         if (!btn) return;
         if ('Notification' in window && Notification.permission === 'granted') {
-          btn.innerHTML = '<span>🔔 Alertas Activas</span>';
+          btn.innerHTML = '<span>🚨 Alarma Activa</span>';
           btn.className = 'text-xs bg-emerald-50 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200';
         }
       },
 
-      playAlertSound() {
+      // NUEVO MOTOR DE AUDIO: Alarma Potente Tipo Sirena de Emergencia
+      playLoudAlarmSound() {
         try {
-          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+          if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
 
+          const now = this.audioCtx.currentTime;
+          
+          // Creamos el oscilador con onda cuadrada (Square) que es mucho más estridente y fuerte
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
 
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(587.33, this.audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(880, this.audioCtx.currentTime + 0.2);
+          osc.type = 'square'; // Tipo de onda muy llamativa/industrial
 
-          gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.4);
+          // Secuencia multitono estilo sirena (Acento agudo alternado)
+          osc.frequency.setValueAtTime(880, now);          // A5
+          osc.frequency.setValueAtTime(1200, now + 0.15);    // D6 (Agudo)
+          osc.frequency.setValueAtTime(880, now + 0.30);     // A5
+          osc.frequency.setValueAtTime(1200, now + 0.45);    // D6 (Agudo)
+          osc.frequency.setValueAtTime(880, now + 0.60);     // A5
+          osc.frequency.setValueAtTime(1400, now + 0.75);    // E6 (Muy Agudo)
+
+          // Volumen máximo sostenido (0.8)
+          gain.gain.setValueAtTime(0.8, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 1.1);
 
           osc.connect(gain);
           gain.connect(this.audioCtx.destination);
 
-          osc.start();
-          osc.stop(this.audioCtx.currentTime + 0.4);
-        } catch (e) {}
+          osc.start(now);
+          osc.stop(now + 1.1);
+        } catch (e) {
+          console.error("Error al reproducir el tono fuerte:", e);
+        }
       },
 
       triggerNotification(request) {
-        this.playAlertSound();
+        this.playLoudAlarmSound();
+
         if ('Notification' in window && Notification.permission === 'granted') {
-          const title = `🚨 Nuevo Pedido: ${request.id}`;
+          const title = `🚨 ¡NUEVO PEDIDO DE LINK RECIBIDO! (${request.id})`;
           const options = {
-            body: `Cliente: ${request.name}\nMonto: $${request.amount || '0'}\nTipo: ${request.category === 'transfers' ? 'Reintegro' : 'Pago Resumen'}`,
+            body: `👤 Cliente: ${request.name}\n💰 Monto: $${request.amount || '0'}\n📌 Tipo: ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}`,
             icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
             requireInteraction: true
           };
@@ -263,7 +288,7 @@
               <div class="text-xs text-slate-500">DNI: ${req.dni} | Tel: ${req.phone}</div>
             </td>
             <td class="p-4">
-              <div class="text-xs font-bold uppercase text-slate-500">${req.category === 'transfers' ? 'Reintegro / Acreditación' : 'Pago de Resumen'}</div>
+              <div class="text-xs font-bold uppercase text-slate-500">${req.category === 'transfers' ? 'Devolución / Acreditación' : 'Pago de Resumen'}</div>
               <div class="font-extrabold text-nxOrange-600">$${req.amount || '0'} <span class="text-xs font-normal text-slate-500">(${req.paymentType || 'N/A'})</span></div>
             </td>
             <td class="p-4 max-w-xs">${banksDisplay}</td>
@@ -290,7 +315,7 @@
             paymentUrl: newUrl,
             status: newUrl ? 'Link Generado' : 'Pendiente de Link'
           });
-          alert('¡Enlace guardado y sincronizado en la nube correctamente!');
+          alert('¡Enlace guardado y enviado al cliente automáticamente!');
         } catch (error) {
           alert('Error al guardar en Firebase.');
         }
