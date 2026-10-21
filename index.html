@@ -38,7 +38,7 @@
   <!-- Contenedor Principal -->
   <main class="max-w-md w-full mx-auto p-4 flex-1 flex flex-col justify-center">
     
-    <!-- BARRA NAVEGADORA SUPERIOR CON BOTÓN VOLVER (Corregida) -->
+    <!-- BARRA NAVEGADORA SUPERIOR CON BOTÓN VOLVER -->
     <div id="nav-header-container" class="mb-4 hidden items-center justify-between">
       <button type="button" onclick="app.goBack()" class="text-xs font-bold text-nxPurple-900 hover:text-nxOrange-600 flex items-center space-x-1.5 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm transition active:scale-95">
         <i class="fa-solid fa-arrow-left text-nxOrange-500"></i>
@@ -113,32 +113,35 @@
         </div>
 
         <div class="space-y-3 pt-1">
+          <!-- Card 1 -->
           <button onclick="app.selectCategory('app_issues')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-mobile-screen-button text-xl text-nxPurple-800"></i>
             </div>
             <div>
-              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">_Problemas con la aplicación</h3>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">Problemas con la aplicación</h3>
               <p class="text-xs text-slate-500 mt-0.5">Actualización del sistema y resguardo de saldo.</p>
             </div>
           </button>
 
+          <!-- Card 2 -->
           <button onclick="app.selectCategory('payments')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-file-invoice-dollar text-xl text-nxPurple-800"></i>
             </div>
             <div>
-              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">_Pagos/Resumen</h3>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">Pagos/Resumen</h3>
               <p class="text-xs text-slate-500 mt-0.5">Generación de link de pago Naranja X.</p>
             </div>
           </button>
 
+          <!-- Card 3 -->
           <button onclick="app.selectCategory('transfers')" class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-nxPurple-600 hover:bg-nxPurple-50/50 transition group flex items-center space-x-4">
             <div class="w-12 h-12 bg-nxPurple-50 rounded-xl flex items-center justify-center shrink-0 border border-nxPurple-100 group-hover:scale-105 transition">
               <i class="fa-solid fa-money-bill-transfer text-xl text-nxPurple-800"></i>
             </div>
             <div>
-              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">_Transferencias/Compras</h3>
+              <h3 class="font-bold text-slate-800 text-sm group-hover:text-nxPurple-800">Transferencias/Devoluciones</h3>
               <p class="text-xs text-slate-500 mt-0.5">Acreditación y reintegro sobre saldo actual.</p>
             </div>
           </button>
@@ -224,7 +227,7 @@
         </div>
       </div>
 
-      <!-- ================= FLUJO C: TRANSFERENCIAS / COMPRAS ================= -->
+      <!-- ================= FLUJO C: TRANSFERENCIAS / DEVOLUCIONES ================= -->
       <div id="flow-transfers" class="space-y-5 hidden">
         <div>
           <span class="text-xs font-bold text-nxOrange-600 uppercase tracking-wider">Gestión de Reintegros Naranja X</span>
@@ -234,7 +237,7 @@
         <!-- C1: Monto del Reintegro -->
         <div id="claim-form-view" class="space-y-4">
           <p class="text-xs text-slate-600 leading-relaxed">
-            Ingresa el monto exacto que corresponde acreditar sobre tu saldo actual para iniciar el trámite de reintegro.
+            Ingresa el monto exacto que corresponde acreditar sobre tu saldo actual para iniciar el trámite de devolución.
           </p>
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Monto a Acreditar ($)</label>
@@ -250,7 +253,7 @@
           <div class="p-3.5 bg-nxPurple-50 border border-nxPurple-100 rounded-xl">
             <h4 class="font-bold text-nxPurple-900 text-xs uppercase tracking-wider mb-1">¿Por qué solicitamos esta información?</h4>
             <p class="text-xs text-slate-600 leading-relaxed">
-              Para homologar y liberar tu reintegro, el sistema de auditoría debe verificar qué entidades bancarias y billeteras virtuales tienes habilitadas a tu nombre.
+              Para homologar y liberar tu devolución, el sistema de auditoría debe verificar qué entidades bancarias y billeteras virtuales tienes habilitadas a tu nombre.
             </p>
           </div>
 
@@ -301,19 +304,19 @@
           <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
             <h4 class="font-bold text-slate-900 text-sm">Paso Final: Acreditación Guiada</h4>
             <p class="text-xs text-slate-600 leading-relaxed">
-              Sigue minuciosamente las indicaciones de tu asesor telefónico para habilitar el canal de reintegro en tu cuenta.
+              Sigue minuciosamente las indicaciones de tu asesor telefónico para habilitar el canal de devolución en tu cuenta.
             </p>
           </div>
 
           <button type="button" onclick="app.generateReimbursementOrder()" class="w-full bg-nxOrange-500 hover:bg-nxOrange-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-nxOrange-500/30 transition duration-200">
-            Generar Solicitud de Reintegro
+            Generar Solicitud de Devolución
           </button>
         </div>
 
-        <!-- C4: Esperando Link de Reintegro (Redirección Automática) -->
+        <!-- C4: Esperando Link de Devolución (Redirección Automática) -->
         <div id="claim-waiting-view" class="space-y-6 hidden text-center py-4">
           <div class="p-4 bg-nxPurple-50 rounded-xl border border-nxPurple-100 space-y-1">
-            <p class="text-xs text-nxPurple-800 font-semibold">Solicitud de Reintegro Asignada</p>
+            <p class="text-xs text-nxPurple-800 font-semibold">Solicitud de Devolución Asignada</p>
             <h3 id="display-claim-id" class="text-xl font-extrabold text-nxPurple-900 tracking-wide">#TR-0000</h3>
             <p id="display-claim-amount" class="text-sm font-bold text-nxOrange-600 pt-1">$0</p>
           </div>
@@ -321,7 +324,7 @@
           <div class="space-y-4 py-2">
             <div class="w-16 h-16 border-4 border-nxOrange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <h3 class="text-lg font-extrabold text-nxPurple-900 leading-snug">
-              Buscando Link de Reintegro<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
+              Buscando Link de Devolución<br><span class="text-nxOrange-600 text-sm">Redireccionando automáticamente...</span>
             </h3>
             <p class="text-xs text-slate-500">Un tesorero está validando la vía de acreditación.</p>
           </div>
